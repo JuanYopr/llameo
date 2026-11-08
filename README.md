@@ -19,14 +19,14 @@ prototipo/   Prototipo de la app móvil (mismo diseño, se mantienen sincronizad
 
 ## Audios
 
-Los `.mp3` (unos 100 MB entre las dos versiones) no van en este primer paquete.
-`index.html` los busca en `au/` con estos nombres:
+Los audios de los ritmos están en `web/au/` y `prototipo/au/`.
 
-01.mp3 … 14.mp3, caliente, cumbia-de-la-calle (solo web), el-pescador, guiro-114,
-ingrid-solo-plena, inspiracion, mira-el-sol, perreo-y-to, pescador-gaitas,
-pescador-guia, pescador-guiro, pescador-punteador, pescador-requinto,
-pescador-seguidor, pescador-voz, rap-plena, rio-noite, rueda-de-tambor,
-te-equivocas, trombone-mambo
+**Faltan 4** (pesan más de 4 MB y hay que subirlos a mano en las dos carpetas `au/`):
+
+- `ingrid-solo-plena.mp3`
+- `inspiracion.mp3`
+- `rueda-de-tambor.mp3`
+- `trombone-mambo.mp3`
 
 ## Convenciones del proyecto
 
