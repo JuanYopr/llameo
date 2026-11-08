@@ -21,10 +21,8 @@ prototipo/   Prototipo de la app móvil (mismo diseño, se mantienen sincronizad
 
 Los audios de los ritmos están en `web/au/` y `prototipo/au/`.
 
-**Faltan 2** (pesan más de 4 MB y hay que subirlos a mano en las dos carpetas `au/`):
-
-- `rueda-de-tambor.mp3`
-- `trombone-mambo.mp3`
+`rueda-de-tambor.mp3` y `trombone-mambo.mp3` se dejaron fuera del repositorio a propósito.
+El código (`index.html`) todavía los menciona, así que esos dos ritmos no sonarán si se abre esta copia.
 
 ## Convenciones del proyecto
 
