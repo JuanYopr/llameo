@@ -21,10 +21,8 @@ prototipo/   Prototipo de la app móvil (mismo diseño, se mantienen sincronizad
 
 Los audios de los ritmos están en `web/au/` y `prototipo/au/`.
 
-**Faltan 4** (pesan más de 4 MB y hay que subirlos a mano en las dos carpetas `au/`):
+**Faltan 2** (pesan más de 4 MB y hay que subirlos a mano en las dos carpetas `au/`):
 
-- `ingrid-solo-plena.mp3`
-- `inspiracion.mp3`
 - `rueda-de-tambor.mp3`
 - `trombone-mambo.mp3`
 
