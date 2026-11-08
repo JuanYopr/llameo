@@ -1,0 +1,1158 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta charset="utf-8">
+<title>Llameo · Versión web</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..100,500..900&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one phone screen; a chat-style hub of tracks people layer on, with practice and classes as side rooms. Single dark look on purpose. */
+:root{
+  color-scheme:dark;
+  --out:#000;--bg:#07090c;--sf:#11151b;--sf2:#1a2029;--bd:#262e39;--tx:#f3f5f7;--mut:#8c97a6;
+  --red:#e5321f;--blue:#2ba6ec;--gold:#f0b429;--ink:#07090c;
+  --plena:#e5321f;--bullerengue:#5cc98f;--cumbia:#f0b429;--bossa:#f28b6b;--bomba:#b48cf2;
+  --f-disp:'Archivo','Arial Narrow',system-ui,sans-serif;
+  --f-body:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--out);color:var(--tx);font-family:var(--f-body);display:flex;align-items:center;justify-content:center}
+.phone{width:100%;max-width:400px;height:100%;max-height:840px;background:var(--bg);position:relative;overflow:hidden;border:1px solid var(--bd);border-radius:36px}
+@media (max-width:440px){.phone{border:0;border-radius:0;max-height:none}}
+img{display:block;max-width:100%}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+button:disabled{cursor:not-allowed;opacity:.4}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.scr{position:absolute;inset:0;padding:22px 18px 96px;overflow-y:auto;display:none;flex-direction:column;gap:14px}
+.scr.on{display:flex}
+.scr>*{flex-shrink:0}
+#thread>.chat{flex-shrink:1}
+.scr.full{padding-bottom:28px}
+h1,h2,h3{font-family:var(--f-disp);font-stretch:75%;font-weight:800;letter-spacing:-.01em;text-wrap:balance;line-height:1.02}
+h1{font-size:44px}h2{font-size:30px}h3{font-size:20px}
+p{line-height:1.5}
+.mut{color:var(--mut);font-size:14px}
+.mono{font-family:var(--f-mono);font-size:12px;letter-spacing:.02em}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--mut)}
+.row{display:flex;align-items:center;gap:10px}
+.between{justify-content:space-between}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px 18px;border-radius:14px;font-weight:700;font-size:16px;background:var(--tx);color:var(--ink)}
+.btn.alt{background:var(--sf);color:var(--tx);border:1px solid var(--bd)}
+.btn.red{background:var(--red);color:#fff}
+.btn:active:not(:disabled){transform:scale(.98)}
+.link{color:var(--mut);font-weight:700;font-size:14px;padding:8px;align-self:center}
+.back{color:var(--mut);font-weight:700;align-self:flex-start;padding:4px 0}
+.panel{background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.gp{display:inline-flex;align-items:center;border-radius:20px;padding:3px 10px;font-weight:800;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+.gp.plena{background:var(--plena);color:#fff}.gp.bullerengue{background:var(--bullerengue)}.gp.bomba{background:var(--bomba)}.gp.bossa{background:var(--bossa)}.gp.cumbia{background:var(--cumbia)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.chip{flex:none;border:1px solid var(--bd);border-radius:20px;padding:8px 14px;font-weight:600;font-size:14px;color:var(--mut);background:var(--sf)}
+.chip[aria-pressed="true"]{background:var(--tx);color:var(--ink);border-color:var(--tx)}
+.need{display:inline-flex;border:1.5px dashed var(--mut);color:var(--mut);border-radius:20px;padding:3px 10px;font-weight:700;font-size:12px}
+.toast{position:absolute;left:18px;right:18px;bottom:92px;background:var(--tx);color:var(--ink);padding:12px 14px;border-radius:12px;font-weight:700;font-size:14px;z-index:30}
+.ex{font-size:12px;color:var(--mut);border:1px dashed var(--bd);border-radius:10px;padding:6px 10px;align-self:flex-start}
+
+/* menú de géneros */
+.gsel{position:relative;z-index:8}
+.gbtn{display:flex;align-items:center;gap:10px;width:100%;background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:12px 14px;font-weight:700;font-size:15px;text-align:left}
+.gbtn span.l{flex:1}
+.gbtn svg{color:var(--mut);transition:transform .15s}
+.gbtn[aria-expanded="true"] svg{transform:rotate(180deg)}
+.gdot{width:12px;height:12px;border-radius:50%;flex:none;background:var(--tx)}
+.gdot.all{background:conic-gradient(var(--plena) 0 25%,var(--bomba) 0 50%,var(--bullerengue) 0 75%,var(--bossa) 0)}
+.gdot.bomba{background:var(--bomba)}.gdot.bossa{background:var(--bossa)}.gdot.plena{background:var(--plena)}.gdot.bullerengue{background:var(--bullerengue)}.gdot.cumbia{background:var(--cumbia)}
+.gmenu{position:absolute;left:0;right:0;top:calc(100% + 6px);background:var(--sf2);border:1px solid var(--bd);border-radius:14px;padding:6px;display:flex;flex-direction:column;box-shadow:0 18px 40px rgba(0,0,0,.6)}
+.gmenu button{display:flex;align-items:center;gap:10px;padding:11px 10px;border-radius:10px;font-weight:600;font-size:15px;text-align:left}
+.gmenu button[aria-selected="true"]{background:var(--bd)}
+.gmenu button span.l{flex:1}
+.gmenu .c{font-family:var(--f-mono);font-size:12px;color:var(--mut)}
+
+/* portadas */
+.cvban{display:block;width:100%;max-width:100%;height:auto;object-fit:contain;border-radius:16px;background:#000}
+.cvban.sm{width:auto;max-height:120px;align-self:flex-start;border-radius:12px}
+.sq.cvsq{background:#000 center 42%/cover no-repeat}
+.tcard .face.cv{background-color:#000!important;background-size:contain!important;background-repeat:no-repeat!important;background-position:center!important;color:#fff;height:auto!important;aspect-ratio:16/9}
+.tcard .face.cv .pb{top:auto;bottom:10px}
+.tcard .face.cv .mono{background:rgba(7,9,12,.7);align-self:flex-start;padding:2px 6px;border-radius:6px;margin-top:auto}
+
+/* comunidad */
+#csearch{width:100%;background:var(--sf);color:var(--tx);border:1px solid var(--bd);border-radius:14px;padding:12px 14px;font:inherit;font-size:16px}
+.post{display:flex;flex-direction:column;gap:8px;width:100%;text-align:left;background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:14px}
+.post h3{font-size:19px}
+.badge{display:inline-flex;border-radius:20px;padding:1px 8px;font-weight:800;font-size:11px;background:var(--red);color:#fff;margin-left:6px}
+.ctag{display:inline-flex;border-radius:20px;padding:2px 9px;font-weight:700;font-size:12px;background:var(--sf2);border:1px solid var(--bd);color:#d5dbe2}
+.ok{display:inline-flex;border-radius:20px;padding:2px 9px;font-weight:800;font-size:12px;border:1px solid var(--blue);color:var(--blue)}
+.pmeta{display:flex;gap:16px;color:var(--mut);font-size:13px;font-weight:600}
+.reply{border-top:1px solid var(--bd);padding:12px 0;display:flex;flex-direction:column;gap:6px}
+.acts{display:flex;gap:16px;flex-wrap:wrap}
+.acts button{color:var(--mut);font-weight:700;font-size:13px;padding:4px 0}
+.acts button.on{color:var(--red)}
+.err{color:#ff6b61;font-size:14px}
+
+/* cuenta */
+.pw{position:relative;display:block}.pw input{width:100%;padding-right:86px}
+.pw button{position:absolute;right:6px;top:50%;transform:translateY(-50%);padding:8px 10px;font-weight:700;font-size:13px;color:var(--blue)}
+.or{display:flex;align-items:center;gap:12px;color:var(--mut);font-size:13px}
+.or:before,.or:after{content:"";flex:1;height:1px;background:var(--bd)}
+.inl{color:var(--tx);font-weight:700;text-decoration:underline}
+.fld input:focus,.fld textarea:focus{outline:2px solid var(--blue);outline-offset:1px;border-color:var(--blue)}
+
+.brand{display:flex;flex-direction:column;gap:3px}
+#tfilt button,#tmode button{white-space:nowrap;padding:7px 12px;font-size:13px}
+.byline{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);padding-left:33px;white-space:nowrap}
+#welcome .byline{color:#d8dde3}
+.vnote{display:flex;align-items:center;gap:10px;background:var(--sf);border:1px solid var(--bd);border-radius:18px 18px 18px 6px;padding:8px 12px;max-width:340px}
+.vnote .wv{flex:1;min-width:0;overflow:hidden}
+.vplay{width:38px;height:38px;border-radius:50%;background:var(--tx);color:var(--ink);display:grid;place-items:center;flex:none}
+.vplay svg{width:16px;height:16px}
+.vrec{width:52px;height:52px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;flex:none}
+.vrec.on{background:#fff;color:var(--red)}
+@media (prefers-reduced-motion:no-preference){.vrec.on{animation:pulse 1.2s infinite}}
+/* nav */
+.nav{position:absolute;left:0;right:0;bottom:0;display:flex;border-top:1px solid var(--bd);background:var(--sf);padding-bottom:env(safe-area-inset-bottom,0px);z-index:10}
+.nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0 9px;font-weight:700;font-size:12px;color:var(--mut)}
+.nav button[aria-current="true"]{color:var(--tx)}
+.nav button[aria-current="true"] svg{color:var(--red)}
+
+/* welcome */
+#welcome{padding:0;justify-content:flex-end;background:linear-gradient(180deg,rgba(7,9,12,.75) 0%,rgba(7,9,12,0) 28%,rgba(7,9,12,0) 42%,rgba(7,9,12,.94) 72%,var(--bg) 100%),url(img/portada.jpg) 55% 40%/cover no-repeat}
+#welcome .in{padding:0 22px 34px;display:flex;flex-direction:column;gap:12px}
+.mark{font-family:var(--f-disp);font-stretch:62%;font-weight:900;font-size:30px;letter-spacing:.01em;display:flex;align-items:center;gap:8px;line-height:1}
+.mark b{color:var(--red);font-weight:900}
+.mark svg{color:var(--red)}
+#welcome .top{position:absolute;top:24px;left:22px}
+#welcome h1{font-size:54px;font-stretch:62%;text-transform:uppercase;line-height:.92}
+#welcome h1 span{color:var(--red)}
+.gline{display:flex;gap:6px;flex-wrap:wrap}
+
+/* home */
+.hdr{display:flex;align-items:center;justify-content:space-between}
+.tracks{display:flex;gap:12px;overflow-x:auto;padding:0 0 4px;scrollbar-width:none;scroll-snap-type:x mandatory}
+.tcard{flex:none;width:208px;border-radius:20px;overflow:hidden;background:var(--sf);border:1px solid var(--bd);scroll-snap-align:start;display:flex;flex-direction:column}
+.tcard .face{height:118px;padding:12px 14px;display:flex;flex-direction:column;justify-content:space-between;color:var(--ink);position:relative;text-align:left;width:100%}
+.tcard.bomba .face{background:var(--bomba)}.tcard.bossa .face{background:var(--bossa)}.tcard.plena .face{background:var(--plena);color:#fff}.tcard.bullerengue .face{background:var(--bullerengue)}.tcard.cumbia .face{background:var(--cumbia)}
+.tcard .gw{font-family:var(--f-disp);font-stretch:62%;font-weight:900;font-size:40px;padding-right:40px;text-transform:uppercase;line-height:.85}
+.tcard .gw.long{font-size:25px;letter-spacing:-.01em}
+.tcard .pb{position:absolute;right:12px;top:12px;width:36px;height:36px;border-radius:50%;background:rgba(7,9,12,.85);color:#fff;display:grid;place-items:center}
+.tcard .body{padding:10px 14px 14px;display:flex;flex-direction:column;gap:8px}
+.tcard .body b{font-size:15px}
+.tcard .open{border:1px solid var(--bd);border-radius:12px;padding:9px;font-weight:700;font-size:14px;background:var(--sf2)}
+.lcard{display:flex;flex-direction:column;gap:10px;width:100%;text-align:left;background:var(--sf);border:1px solid var(--bd);border-radius:20px;padding:14px}
+.lcard h3{font-size:22px}
+.avs{display:flex}
+.av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:11px;color:var(--ink);flex:none;border:2px solid var(--sf)}
+.avs .av+.av{margin-left:-8px}
+.lplay{width:44px;height:44px;border-radius:50%;background:var(--tx);color:var(--ink);display:grid;place-items:center;flex:none}
+
+/* thread */
+#thread{padding:0;gap:0;overflow:hidden}
+.tbar{flex:none;background:var(--bg);border-bottom:1px solid var(--bd);padding:14px 16px 12px;display:flex;flex-direction:column;gap:10px}
+.tbar h2{font-size:24px}
+.invite{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--bd);border-radius:20px;padding:7px 12px;font-weight:700;font-size:13px;background:var(--sf)}
+.mixbar{display:flex;align-items:center;gap:12px}
+.bigplay{width:48px;height:48px;border-radius:50%;background:var(--tx);color:var(--ink);display:grid;place-items:center;flex:none}
+.prog{height:6px;border-radius:4px;background:var(--sf2);overflow:hidden;flex:1}
+.prog i{display:block;height:100%;width:0;background:var(--blue)}
+.chat{flex:1;overflow-y:auto;padding:14px 14px 20px;display:flex;flex-direction:column;gap:14px}
+.base{border:1px solid var(--bd);border-radius:18px;padding:12px;display:flex;gap:12px;align-items:center;background:var(--sf)}
+.base .sq{width:52px;height:52px;border-radius:12px;display:grid;place-items:center;font-family:var(--f-disp);font-stretch:62%;font-weight:900;font-size:28px;overflow:hidden;text-transform:uppercase;color:var(--ink);flex:none}
+.msg{display:flex;gap:8px;align-items:flex-end;max-width:92%}
+.msg.me{align-self:flex-end;flex-direction:row-reverse}
+.bub{background:var(--sf);border:1px solid var(--bd);border-radius:18px 18px 18px 6px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.msg.me .bub{border-radius:18px 18px 6px 18px;background:#2a0f0b;border-color:#5a2018}
+.bh{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px}
+.part{display:inline-flex;border-radius:20px;padding:2px 9px;font-weight:700;font-size:12px;background:var(--sf2);border:1px solid var(--bd)}
+.wv{display:flex;align-items:center;gap:2px;height:30px}
+.wv i{width:3px;border-radius:2px;background:#3b4552;flex:none}
+.wv i.f{background:var(--blue)}
+.msg.me .wv i.f{background:var(--red)}
+.off .wv i{opacity:.35}
+.bf{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.inmix{font-size:12px;font-weight:700;color:var(--mut);border:1px solid var(--bd);border-radius:20px;padding:4px 10px;white-space:nowrap}
+.inmix[aria-pressed="true"]{color:var(--blue);border-color:var(--blue)}
+.note{font-size:14px;line-height:1.45}
+.sys{align-self:center;text-align:center;font-size:12px;color:var(--mut);max-width:80%}
+.composer{flex:none;background:var(--bg);border-top:1px solid var(--bd);padding:10px 12px calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;align-items:center;z-index:6}
+.composer input{flex:1;min-width:0;background:var(--sf);border:1px solid var(--bd);border-radius:22px;padding:12px 14px;color:var(--tx);font:inherit;font-size:16px}
+.send{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--sf2);flex:none}
+.monta{display:flex;align-items:center;gap:6px;background:var(--red);color:#fff;border-radius:22px;padding:11px 16px;font-weight:800;flex:none}
+
+/* record */
+.parts{display:flex;flex-wrap:wrap;gap:8px}
+.parts button{border:1px solid var(--bd);border-radius:20px;padding:8px 13px;font-weight:700;font-size:14px;color:var(--mut);background:var(--sf)}
+.parts button[aria-pressed="true"]{background:var(--red);border-color:var(--red);color:#fff}
+.hear{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd);font-size:14px}
+.hear:last-child{border-bottom:0}
+.hear span{flex:1;min-width:0}
+.sw{width:44px;height:26px;border-radius:14px;background:var(--sf2);border:1px solid var(--bd);position:relative;flex:none}
+.sw:after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--mut);transition:transform .15s}
+.sw[aria-checked="true"]{background:var(--blue);border-color:var(--blue)}
+.sw[aria-checked="true"]:after{transform:translateX(18px);background:#fff}
+.recwrap{display:flex;flex-direction:column;align-items:center;gap:10px;padding:10px 0}
+.count{font-family:var(--f-disp);font-stretch:62%;font-weight:900;font-size:64px;line-height:1;height:64px;color:var(--red)}
+.recb{width:96px;height:96px;border-radius:50%;border:3px solid var(--tx);display:grid;place-items:center}
+.recb i{width:66px;height:66px;border-radius:50%;background:var(--red);transition:all .2s}
+.recb.on i{width:34px;height:34px;border-radius:9px}
+@media (prefers-reduced-motion:no-preference){.recb.on{animation:pulse 1.2s infinite}@keyframes pulse{50%{box-shadow:0 0 0 12px rgba(229,50,31,.25)}}}
+.tip{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.45;color:#cdd3da}
+.tip svg{flex:none;color:var(--blue);margin-top:1px}
+.upl{display:flex;align-items:center;justify-content:center;gap:6px;color:var(--mut);font-weight:700;font-size:14px;padding:8px;cursor:pointer;align-self:center}
+.upl input{position:absolute;width:1px;height:1px;opacity:0}
+label.fld{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:14px}
+.fld input,.fld textarea{background:var(--sf);color:var(--tx);border:1px solid var(--bd);border-radius:14px;padding:13px;font:inherit;font-size:16px;resize:vertical}
+input[type=range]{width:100%;accent-color:var(--red)}
+.chk{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.45;color:#dfe3e8}
+.chk input{width:22px;height:22px;accent-color:var(--red);flex:none}
+.seg{display:flex;background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:4px}
+.seg button{flex:1;padding:9px;border-radius:10px;font-weight:700;color:var(--mut);font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--tx);color:var(--ink)}
+
+/* practice & classes */
+.trow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px;background:var(--sf);border:1px solid var(--bd);border-radius:16px}
+.trow .sq{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;font-family:var(--f-disp);font-stretch:62%;font-weight:900;font-size:26px;overflow:hidden;text-transform:uppercase;color:var(--ink);flex:none}
+.sq.bomba{background:var(--bomba)}.sq.bossa{background:var(--bossa)}.sq.plena{background:var(--plena);color:#fff}.sq.bullerengue{background:var(--bullerengue)}.sq.cumbia{background:var(--cumbia)}
+.trow div{flex:1;min-width:0}
+.ghead{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;padding-top:6px}
+.ghead h3{font-size:30px;text-transform:uppercase;font-stretch:62%}
+.mcard{display:flex;gap:14px;align-items:center;width:100%;text-align:left;background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:12px}
+.mcard .art{width:84px;height:84px;border-radius:14px;background:#000;display:grid;place-items:center;padding:8px;flex:none}
+.mcard .art img{width:100%;height:100%;object-fit:contain}
+.free{background:var(--blue);color:var(--ink);border-radius:20px;padding:2px 9px;font-weight:800;font-size:11px}
+.lock{border:1px solid var(--mut);color:var(--mut);border-radius:20px;padding:1px 9px;font-weight:800;font-size:11px}
+.soon{border:1px dashed var(--bd);border-radius:18px;padding:16px;color:var(--mut);font-size:14px;line-height:1.45}
+.les{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 2px;border-bottom:1px solid var(--bd)}
+.num{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--blue);color:var(--blue);display:grid;place-items:center;font-family:var(--f-mono);font-size:13px;flex:none}
+.les .num.done{background:var(--blue);color:var(--ink)}
+.ctl{display:flex;justify-content:center;align-items:center;gap:24px}
+.ctl button{width:52px;height:52px;border:1px solid var(--bd);border-radius:50%;background:var(--sf);display:grid;place-items:center}
+.ctl .play{width:76px;height:76px;background:var(--tx);color:var(--ink);border:0}
+.plan{border:1px solid var(--bd);border-radius:16px;padding:16px;width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center;background:var(--sf)}
+.plan[aria-pressed="true"]{border:2px solid var(--tx)}
+.avatar{width:58px;height:58px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-weight:800;font-size:18px;flex:none}
+
+/* sheet */
+.shade{position:absolute;inset:0;background:rgba(0,0,0,.6);z-index:20;display:flex;align-items:flex-end}
+.sheet{width:100%;background:var(--sf);border-top-left-radius:24px;border-top-right-radius:24px;border-top:1px solid var(--bd);padding:20px 18px calc(24px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px}
+.linkbox{display:flex;gap:8px;align-items:center;background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:6px 6px 6px 12px}
+.linkbox span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--f-mono);font-size:13px}
+.linkbox button{background:var(--tx);color:var(--ink);border-radius:9px;padding:8px 12px;font-weight:700;font-size:13px}
+
+/* ===== versión web: escritorio ===== */
+.navbrand{display:none}
+@media (min-width:900px){
+  body{display:block}
+  .phone{max-width:none;max-height:none;height:100%;border:0;border-radius:0}
+  h1{font-size:64px}h2{font-size:40px}h3{font-size:22px}
+  .nav{top:0;bottom:0;right:auto;width:236px;flex-direction:column;justify-content:flex-start;gap:4px;border-top:0;border-right:1px solid var(--bd);padding:26px 14px}
+  .nav button{flex:none;flex-direction:row;justify-content:flex-start;gap:12px;font-size:15px;padding:12px 14px;border-radius:12px}
+  .nav button[aria-current="true"]{background:var(--sf2)}
+  .navbrand{display:flex;margin:0 0 22px 10px}
+  #app:has(#nav:not([hidden])) .scr{left:236px}
+  .scr{padding:44px max(48px,calc((100% - 1080px)/2)) 56px}
+  #home .hdr{display:none}
+  .tracks{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));overflow:visible;scroll-snap-type:none}
+  .tcard{width:auto}
+  .tcard .face{height:150px}
+  #llist{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}
+  #plist,#pmine{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}
+  .gsel{max-width:360px}
+  #rec,#review,#pdetail,#register,#login,#cnew,#cpost,#plans,#profile,#module,#player,#community{padding-left:max(48px,calc((100% - 720px)/2));padding-right:max(48px,calc((100% - 720px)/2))}
+  #thread{padding:0}
+  #thread .tbar,#thread .chat,#thread .composer{padding-left:max(32px,calc((100% - 800px)/2));padding-right:max(32px,calc((100% - 800px)/2))}
+  .cvban{width:auto;max-width:100%;max-height:min(560px,62vh);align-self:flex-start}
+  .cvban.sm{max-height:140px}
+  #welcome{background-position:70% 40%;background-image:linear-gradient(90deg,rgba(7,9,12,.96) 0%,rgba(7,9,12,.85) 34%,rgba(7,9,12,.15) 70%,rgba(7,9,12,0) 100%),url(img/portada.jpg)}
+  #welcome .in{max-width:620px;padding:0 72px 88px}
+  #welcome h1{font-size:104px}
+  #welcome p{font-size:18px}
+  #welcome .btn{max-width:420px}
+  #welcome .link{align-self:flex-start}
+  #welcome .top{top:40px;left:72px}
+  .toast{left:auto;right:28px;bottom:28px;width:380px}
+  .shade{align-items:center;justify-content:center}
+  .sheet{max-width:480px;border-radius:24px;border:1px solid var(--bd)}
+}
+</style>
+
+<div class="phone" id="app">
+
+<!-- Bienvenida -->
+<section class="scr on full" id="welcome">
+  <div class="top brand"><div class="mark"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/></svg>Llameo</div><span class="byline">por Taller Toca Plena</span></div>
+  <div class="in">
+    <div class="gline"><span class="gp plena">Plena</span><span class="gp bomba">Bomba</span><span class="gp bullerengue">Bullerengue</span><span class="gp bossa">Bossa nova</span></div>
+    <h1>Móntate en <span>el ritmo</span></h1>
+    <p style="color:#e3e7eb">Canta, toca o hazle coro a un ritmo, y otra gente se monta encima de lo tuyo. Así se arma el llameo.</p>
+    <button class="btn red" data-go="register">Crear cuenta</button>
+    <button class="btn alt" data-go="login">Ya tengo cuenta</button>
+    <button class="link" data-go="home">Entrar como invitado</button>
+  </div>
+</section>
+
+<!-- Llameo (inicio) -->
+<section class="scr" id="home">
+  <div class="hdr">
+    <div class="brand"><div class="mark"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/></svg>Llameo</div><span class="byline">por Taller Toca Plena</span></div>
+    <button class="invite" data-go="profile" aria-label="Perfil"><span class="av" style="background:var(--red);color:#fff;width:24px;height:24px;border:0;font-size:10px">TÚ</span></button>
+  </div>
+  <div class="gsel" id="gfilter"></div>
+  <div><h3>Ritmos para montarte</h3><p class="mut" style="margin-top:4px">Escúchalo, abre un llameo y graba la primera toma.</p></div>
+  <div class="tracks" id="tracks"></div>
+  <div class="row between" style="margin-top:6px"><h3>Llameos abiertos</h3></div>
+  <div id="llist" style="display:flex;flex-direction:column;gap:12px"></div>
+  <span class="ex">Los llameos y nombres son ejemplos del prototipo</span>
+</section>
+
+<!-- Hilo de un llameo -->
+<section class="scr" id="thread">
+  <div class="tbar">
+    <div class="row between"><button class="back" id="tback">‹ Llameos</button><button class="invite" id="tinvite"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Llamar gente</button></div>
+    <div><span id="tgenre"></span><h2 id="ttitle" style="margin-top:6px"></h2></div>
+    <div class="row between" style="gap:8px;flex-wrap:wrap"><div class="seg" id="tfilt" style="padding:3px"><button data-tf="all" aria-pressed="true">Todo</button><button data-tf="takes" aria-pressed="false">Tomas</button><button data-tf="chat" aria-pressed="false">Chat</button></div><span class="mut" id="tppl" style="font-size:12px"></span></div>
+    <div class="mixbar"><button class="bigplay" id="tplay" aria-label="Escuchar el llameo completo"></button><div style="flex:1;display:flex;flex-direction:column;gap:6px"><div class="prog"><i id="tfill"></i></div><div class="row between mono" style="color:var(--mut)"><span id="tcur">0:00</span><span id="tinfo"></span></div></div></div>
+    <div class="seg" id="tmode" style="padding:3px"><button data-m="all" aria-pressed="true">Con las tomas</button><button data-m="base" aria-pressed="false">Solo el ritmo, sin voces</button></div>
+  </div>
+  <div class="chat" id="chat"></div>
+  <form class="composer" id="composer" autocomplete="off">
+    <input id="ctext" placeholder="Escríbele al grupo…" aria-label="Mensaje del chat">
+    <button class="send" type="submit" aria-label="Enviar mensaje"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    <button class="monta" type="button" id="cmonta"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Móntate</button>
+  </form>
+</section>
+
+<!-- Grabar -->
+<section class="scr full" id="rec">
+  <button class="back" id="rback">‹ Cancelar</button>
+  <img class="cvban sm" id="rcover" alt="" hidden>
+  <div><h2 id="rtitle">Móntate</h2><p class="mut" id="rsub"></p></div>
+  <div class="eyebrow">¿Qué vas a hacer?</div>
+  <div class="parts" id="rparts"></div>
+  <label class="fld" id="rotherbox" hidden>¿Qué instrumento vas a tocar?<input id="rother" maxlength="30" placeholder="Cuatro, maracas, trompeta…"></label>
+  <div class="eyebrow">Lo que vas a oír mientras grabas</div>
+  <div class="panel" style="gap:0;padding:4px 14px" id="rhear"></div>
+  <div class="tip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3M4 15h3v5H5a1 1 0 0 1-1-1zM20 15h-3v5h2a1 1 0 0 0 1-1z"/></svg><span>Ponte audífonos. Así el micrófono solo graba lo tuyo y tu toma cuadra con las demás.</span></div>
+  <div class="recwrap">
+    <div class="count" id="rcount" aria-live="polite"></div>
+    <button class="recb" id="rbtn" aria-label="Grabar"><i></i></button>
+    <div class="mono" id="rtime" style="color:var(--mut)">0:00</div>
+    <div class="prog" style="width:100%;flex:none"><i id="rfill" style="background:var(--red)"></i></div>
+  </div>
+  <label class="upl"><input type="file" id="rfile" accept="audio/*">Usar un audio grabado en mi teléfono</label>
+  <p class="mut" style="font-size:12px;text-align:center">Prototipo: aquí la toma se simula con un sonido de ejemplo. En la app se graba con el micrófono.</p>
+</section>
+
+<!-- Revisar y aceptar -->
+<section class="scr full" id="review">
+  <button class="back" id="vback">‹ Grabar de nuevo</button>
+  <h2 id="vtitle">¿Cómo quedó?</h2>
+  <div class="panel">
+    <div class="row"><button class="bigplay" id="vplay" aria-label="Escuchar"></button><div style="flex:1;display:flex;flex-direction:column;gap:6px"><b id="vlabel"></b><div class="prog"><i id="vfill"></i></div></div></div>
+    <label class="fld" style="font-weight:600">Volumen de tu toma<input type="range" id="vvol" min="0" max="150" value="100"></label>
+  </div>
+  <label class="fld" id="vnamebox" hidden>Nombre del llameo<input id="vname" maxlength="60"></label>
+  <label class="fld" id="vnotebox">Dile algo al llameo (opcional)<textarea id="vnote" rows="2" maxlength="200" placeholder="Le metí el coro, ¿quién pregona?"></textarea></label>
+  <label class="chk" id="vconsentbox"><input type="checkbox" id="vconsent"><span>Acepto compartir mi toma en este llameo. Otras personas podrán escucharla y grabar encima.</span></label>
+  <button class="btn red" id="vshare" disabled>Compartir en el llameo</button>
+  <button class="btn alt" id="vredo">Grabar de nuevo</button>
+  <button class="link" id="vprivate">Guardar en privado (solo tú la oyes)</button>
+</section>
+
+<!-- Práctica -->
+<section class="scr" id="practice">
+  <h2>Práctica</h2>
+  <p class="mut" style="margin-top:-6px">Ensaya solo o sola con los ritmos. Lo que grabes aquí es privado hasta que decidas compartirlo.</p>
+  <div class="gsel" id="pfilter"></div>
+  <div id="plist" style="display:flex;flex-direction:column;gap:10px"></div>
+  <h3 style="margin-top:8px">Mis tomas privadas</h3>
+  <div id="pmine" style="display:flex;flex-direction:column;gap:10px"></div>
+</section>
+
+<section class="scr" id="pdetail">
+  <button class="back" data-go="practice">‹ Práctica</button>
+  <img class="cvban" id="pdcover" alt="" hidden>
+  <div><span id="pdg"></span><h2 id="pdt" style="margin-top:6px"></h2><p class="mono" id="pdm" style="color:var(--mut);margin-top:6px"></p></div>
+  <div class="panel"><div class="row"><button class="bigplay" id="pdplay" aria-label="Escuchar el ritmo"></button><div style="flex:1;display:flex;flex-direction:column;gap:6px"><div class="prog"><i id="pdfill"></i></div><div class="row between mono" style="color:var(--mut)"><span id="pdcur">0:00</span><span id="pddur"></span></div></div></div></div>
+  <div class="eyebrow">Instrumentos del ritmo</div>
+  <p class="mut" id="pdhint" style="margin-top:-8px;font-size:13px">Apaga el que vas a tocar tú.</p>
+  <div class="panel" style="gap:0;padding:4px 14px" id="pdstems"></div>
+  <button class="btn red" id="pdrec"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Grabar en privado</button>
+</section>
+
+<!-- Clases -->
+<section class="scr" id="classes">
+  <h2>Clases</h2>
+  <p class="mut" style="margin-top:-6px">Aprende cada género con quien lo enseña.</p>
+  <div class="ghead"><h3 style="color:var(--plena)">Plena</h3><span class="mut">Taller Toca Plena</span></div>
+  <button class="mcard" data-go="module"><span class="art"><img src="img/pandero.png" alt=""></span><span style="display:flex;flex-direction:column;gap:4px"><span><span class="free">Gratis</span></span><b style="font-size:17px">Módulo 1 · Panderos y güiro</b><span class="mut">14 clases en audio</span></span></button>
+  <button class="mcard" data-go="plans"><span class="art"><img src="img/guiro.png" alt=""></span><span style="display:flex;flex-direction:column;gap:4px"><span><span class="lock">Suscripción</span></span><b style="font-size:17px">Módulo 2</b><span class="mut">Próximamente</span></span></button>
+  <div class="ghead"><h3 style="color:var(--bomba)">Bomba</h3><span class="mut">Maestro o maestra por anunciar</span></div>
+  <div class="soon">Clases de bomba en camino. Mientras tanto, practica con el ritmo de bomba y móntate en los llameos.</div>
+  <div class="ghead"><h3 style="color:var(--bullerengue)">Bullerengue</h3><span class="mut">Maestro o maestra por anunciar</span></div>
+  <div class="soon">Clases de bullerengue en producción. Mientras tanto, practica con el ritmo de bullerengue y móntate en los llameos.</div>
+  <div class="ghead"><h3 style="color:var(--bossa)">Bossa nova</h3><span class="mut">Maestro o maestra por anunciar</span></div>
+  <div class="soon">Clases de bossa nova en camino. Mientras tanto, practica con el ritmo de bossa nova y móntate en los llameos.</div>
+</section>
+
+<section class="scr" id="module">
+  <button class="back" data-go="classes">‹ Clases</button>
+  <div><span class="gp plena">Plena</span><h2 style="margin-top:6px">Módulo 1 · Panderos y güiro</h2><p class="mut" style="margin-top:6px">Taller Toca Plena · 14 clases</p></div>
+  <div id="lessons"></div>
+</section>
+
+<section class="scr" id="player" style="align-items:center;text-align:center">
+  <button class="back" data-go="module">‹ Módulo 1</button>
+  <img src="img/panderos-guiro.png" alt="" style="width:240px;margin:12px 0">
+  <h2 id="lt"></h2>
+  <p class="mut" id="ls">Plena · Taller Toca Plena</p>
+  <div style="width:100%;display:flex;flex-direction:column;gap:6px"><div class="prog"><i id="lfill"></i></div><div class="row between mono" style="color:var(--mut)"><span id="lcur">0:00</span><span id="ldur">0:00</span></div></div>
+  <div class="ctl"><button id="lprev" aria-label="Clase anterior"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button><button class="play" id="lplay" aria-label="Reproducir"></button><button id="lnext" aria-label="Clase siguiente"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button></div>
+  <button class="btn alt" id="lpractice" hidden>Practícalo sobre un ritmo</button>
+</section>
+
+<!-- Perfil -->
+<section class="scr" id="profile">
+  <h2>Perfil</h2>
+  <div class="panel" style="flex-direction:row;align-items:center"><div class="avatar" id="pav">TÚ</div><div><b id="pname">Sin cuenta</b><br><span class="mut" id="pmail">Explorando como invitado</span></div></div>
+  <div class="panel" style="flex-direction:row;align-items:center;justify-content:space-between"><span><b>Plan gratis</b><br><span class="mut">Módulo 1 de plena incluido</span></span><button class="btn" style="width:auto;padding:10px 14px;font-size:14px" data-go="plans">Ver planes</button></div>
+  <div class="panel"><div class="row between"><b>Tus llameos</b><span class="mono" id="mycount" style="color:var(--mut)"></span></div><div id="mylls" style="display:flex;flex-direction:column;gap:8px"></div></div>
+  <button class="link" id="logout">Cerrar sesión</button>
+</section>
+
+<section class="scr" id="plans">
+  <button class="back" id="plback">‹ Atrás</button>
+  <h2>Sigue aprendiendo</h2>
+  <p class="mut">El Módulo 1 de plena es gratis. Suscríbete para desbloquear los demás.</p>
+  <button class="plan" aria-pressed="true" data-plan><span><b style="font-size:19px">Mensual</b><br><span class="mut">$9.99 al mes</span></span></button>
+  <button class="plan" aria-pressed="false" data-plan><span><b style="font-size:19px">Anual</b><br><span class="mut">Precio por definir</span></span></button>
+  <button class="btn" id="subbtn">Suscribirme</button>
+</section>
+
+<!-- Comunidad -->
+<section class="scr" id="community">
+  <h2>Comunidad</h2>
+  <p class="mut" style="margin-top:-6px">Pregunta, comparte y aprende con gente que toca y canta como tú.</p>
+  <input id="csearch" type="search" placeholder="Buscar en la comunidad" aria-label="Buscar en la comunidad">
+  <div class="chips" id="cchips" role="group" aria-label="Tipo de publicación"></div>
+  <div id="cfeed" style="display:flex;flex-direction:column;gap:12px"></div>
+  <span class="ex">Publicaciones de ejemplo del prototipo</span>
+  <button class="btn red" id="cnewbtn">Nueva publicación</button>
+</section>
+
+<section class="scr" id="cpost">
+  <button class="back" data-go="community">‹ Comunidad</button>
+  <div id="cthread" style="display:flex;flex-direction:column;gap:10px"></div>
+  <label class="fld">Tu respuesta<textarea id="rtext" rows="3" placeholder="Escribe tu respuesta…"></textarea></label>
+  <button class="btn" id="rsend">Responder</button>
+  <div class="panel" id="vnbox">
+    <div class="row" id="vnidle"><button class="vrec" id="vnrec" aria-label="Grabar nota de voz"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><div style="flex:1;min-width:0"><b id="vnlab">O responde con una nota de voz</b><div class="mut" id="vnsub" style="font-size:13px">Toca el micrófono para grabar. Tócalo otra vez para terminar.</div></div></div>
+    <div class="row" id="vnprev" hidden><button class="vplay" id="vnplay" aria-label="Escuchar tu nota de voz"></button><div class="wv" id="vnwave" style="flex:1;min-width:0;overflow:hidden"></div><span class="mono" id="vndur" style="color:var(--mut)"></span></div>
+    <div class="row" id="vnacts" hidden><button class="btn alt" id="vndel" style="flex:1">Borrar</button><button class="btn red" id="vnsend" style="flex:1">Enviar nota de voz</button></div>
+    <label class="upl" style="align-self:flex-start;padding:0"><input type="file" id="vnfile" accept="audio/*">Subir un audio del teléfono</label>
+    <p class="mut" style="font-size:12px">Prototipo: la grabación se simula. En la app se graba con el micrófono del teléfono.</p>
+  </div>
+</section>
+
+<section class="scr" id="cnew">
+  <button class="back" data-go="community">‹ Comunidad</button>
+  <h2>Nueva publicación</h2>
+  <div class="seg" id="ncat"><button data-c="q" aria-pressed="true">Pregunta</button><button data-c="s" aria-pressed="false">Compartir</button></div>
+  <div class="eyebrow">Género (opcional)</div>
+  <div class="parts" id="ngen"></div>
+  <label class="fld">Título<input id="ntitle" maxlength="90"></label>
+  <label class="fld">Mensaje<textarea id="nbody" rows="5" placeholder="Escribe tu pregunta o lo que quieres compartir"></textarea></label>
+  <p class="mut" style="font-size:12px;line-height:1.45">Escribe con respeto. Cualquier persona puede reportar una publicación y el equipo la revisa.</p>
+  <p class="err" id="nerr" role="alert"></p>
+  <button class="btn red" id="npub">Publicar</button>
+</section>
+
+<!-- Cuenta -->
+<section class="scr full" id="register">
+  <button class="back" id="regback">‹ Atrás</button>
+  <h2>Crea tu cuenta</h2>
+  <p class="mut" style="margin-top:-6px">Con tu cuenta te montas en llameos, guardas tus tomas y participas en la comunidad.</p>
+  <form id="regform" novalidate style="display:flex;flex-direction:column;gap:14px">
+    <label class="fld">Nombre<input id="rname" type="text" autocomplete="name"></label>
+    <label class="fld">Correo electrónico<input id="rmail" type="email" autocomplete="email" inputmode="email"></label>
+    <label class="fld">Contraseña<span class="pw"><input id="rpass" type="password" autocomplete="new-password"><button type="button" data-pw="rpass">Mostrar</button></span><span class="mut" style="font-size:12px;font-weight:500">Al menos 8 caracteres</span></label>
+    <label class="chk"><input type="checkbox" id="rterms"><span>Acepto los términos de uso y la política de privacidad</span></label>
+    <p class="err" id="rerr" role="alert"></p>
+    <button class="btn red" type="submit">Crear cuenta</button>
+  </form>
+  <div class="or">o</div>
+  <button class="btn alt" data-sso="Apple">Continuar con Apple</button>
+  <button class="btn alt" data-sso="Google">Continuar con Google</button>
+  <p class="mut" style="text-align:center">¿Ya tienes cuenta? <button class="inl" data-go="login">Inicia sesión</button></p>
+</section>
+
+<section class="scr full" id="login">
+  <button class="back" id="logback">‹ Atrás</button>
+  <h2>Bienvenido de nuevo</h2>
+  <p class="mut" style="margin-top:-6px">Entra para seguir montándote.</p>
+  <form id="logform" novalidate style="display:flex;flex-direction:column;gap:14px">
+    <label class="fld">Correo electrónico<input id="lmail" type="email" autocomplete="email" inputmode="email"></label>
+    <label class="fld">Contraseña<span class="pw"><input id="lpass" type="password" autocomplete="current-password"><button type="button" data-pw="lpass">Mostrar</button></span></label>
+    <button class="inl" type="button" id="forgot" style="align-self:flex-start;font-weight:600">¿Olvidaste tu contraseña?</button>
+    <p class="err" id="lerr" role="alert"></p>
+    <button class="btn red" type="submit">Iniciar sesión</button>
+  </form>
+  <div class="or">o</div>
+  <button class="btn alt" data-sso="Apple">Continuar con Apple</button>
+  <button class="btn alt" data-sso="Google">Continuar con Google</button>
+  <p class="mut" style="text-align:center">¿No tienes cuenta? <button class="inl" data-go="register">Regístrate</button></p>
+</section>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<nav class="nav" id="nav" aria-label="Principal" hidden>
+  <div class="brand navbrand"><div class="mark"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/></svg>Llameo</div><span class="byline">por Taller Toca Plena</span></div>
+  <button data-go="home" aria-current="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/></svg>Llameo</button>
+  <button data-go="practice" aria-current="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V6l11-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>Práctica</button>
+  <button data-go="classes" aria-current="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6l9-3 9 3-9 3zM7 8v5c0 1.5 2.2 3 5 3s5-1.5 5-3V8M21 6v6"/></svg>Clases</button>
+  <button data-go="community" aria-current="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 20l1-4.6A8 8 0 1 1 21 12z"/></svg>Comunidad</button>
+  <button data-go="profile" aria-current="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0"/></svg>Perfil</button>
+</nav>
+</div>
+
+<script>
+(function(){
+var $=function(s){return document.querySelector(s)};
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function fmt(s){s=Math.max(0,Math.round(s));return Math.floor(s/60)+':'+('0'+s%60).slice(-2)}
+var ICON={play:'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4v16l13-8z"/></svg>',pause:'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>'};
+function setPlay(b,on){b.innerHTML=on?ICON.pause:ICON.play}
+
+/* ---------------- motor de sonido (pistas sintetizadas para el prototipo) ---------------- */
+var AC=null,MASTER=null,NOISE=null;
+function ac(){
+  if(!AC){AC=new (window.AudioContext||window.webkitAudioContext)();MASTER=AC.createDynamicsCompressor();var mg=AC.createGain();mg.gain.value=.8;MASTER.connect(mg);mg.connect(AC.destination);
+    NOISE=AC.createBuffer(1,AC.sampleRate*2,AC.sampleRate);var d=NOISE.getChannelData(0);for(var i=0;i<d.length;i++)d[i]=Math.random()*2-1}
+  if(AC.state==='suspended')AC.resume();return AC}
+function mf(m){return 440*Math.pow(2,(m-69)/12)}
+function env(g,t,a,v,d){g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(v,.0002),t+a);g.gain.exponentialRampToValueAtTime(.0001,t+a+d)}
+function tone(t,o_,type,f0,f1,dur,v){var o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f0,t);if(f1)o.frequency.exponentialRampToValueAtTime(f1,t+dur);env(g,t,.003,v,dur);o.connect(g);g.connect(o_);o.start(t);o.stop(t+dur+.05)}
+function nz(t,o_,ft,f,q,dur,v){var s=AC.createBufferSource();s.buffer=NOISE;var fl=AC.createBiquadFilter();fl.type=ft;fl.frequency.value=f;fl.Q.value=q;var g=AC.createGain();env(g,t,.002,v,dur);s.connect(fl);fl.connect(g);g.connect(o_);s.start(t,Math.random()*1.5);s.stop(t+dur+.05)}
+function sus(t,o_,type,f,dur,v,opt){opt=opt||{};var o=AC.createOscillator(),g=AC.createGain(),out=g;o.type=type;o.frequency.value=f;
+  if(opt.vib){var l=AC.createOscillator(),lg=AC.createGain();l.frequency.value=5.2;lg.gain.value=opt.vib;l.connect(lg);lg.connect(o.detune);l.start(t);l.stop(t+dur+.1)}
+  var a=opt.a||.04,r=opt.r||.08;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+a);g.gain.setValueAtTime(v,Math.max(t+a,t+dur-r));g.gain.linearRampToValueAtTime(0,t+dur);
+  o.connect(g);
+  if(opt.formant){var m=AC.createGain();[[700,6],[1150,7],[2600,8]].forEach(function(fq,i){var b=AC.createBiquadFilter();b.type='bandpass';b.frequency.value=fq[0]*(opt.formant||1);b.Q.value=fq[1];var bg=AC.createGain();bg.gain.value=[1,.6,.25][i];g.connect(b);b.connect(bg);bg.connect(m)});out=m}
+  else if(opt.lp){var lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.setValueAtTime(opt.lp,t);if(opt.lp2)lp.frequency.exponentialRampToValueAtTime(opt.lp2,t+dur);g.connect(lp);out=lp}
+  out.connect(o_);o.start(t);o.stop(t+dur+.05)}
+var V={
+  low:function(t,o,v){tone(t,o,'sine',140,62,.3,v*.9);nz(t,o,'lowpass',500,1,.05,v*.25)},
+  high:function(t,o,v){nz(t,o,'bandpass',1900,1.2,.09,v*.75);tone(t,o,'triangle',340,260,.06,v*.25)},
+  req:function(t,o,v){nz(t,o,'bandpass',3300,2,.08,v*.85);tone(t,o,'sine',560,430,.09,v*.35)},
+  scr:function(t,o,v,long){if(long){for(var i=0;i<5;i++)nz(t+i*.024,o,'highpass',3600,1,.02,v*.45)}else nz(t,o,'highpass',4200,1,.035,v*.5)},
+  clave:function(t,o,v){tone(t,o,'sine',2500,2380,.07,v*.45)},
+  bell:function(t,o,v){var g=AC.createGain();g.gain.value=1;var b=AC.createBiquadFilter();b.type='bandpass';b.frequency.value=900;b.Q.value=2;g.connect(b);b.connect(o);tone(t,g,'square',800,0,.16,v*.18);tone(t,g,'square',540,0,.16,v*.18)},
+  conga:function(t,o,v,k){if(k==='o'){tone(t,o,'sine',215,196,.32,v*.7)}else if(k==='s'){nz(t,o,'bandpass',1300,1.5,.06,v*.6);tone(t,o,'sine',320,300,.05,v*.3)}else tone(t,o,'sine',160,150,.1,v*.3)},
+  bongo:function(t,o,v,hi){tone(t,o,'sine',hi?560:420,hi?520:400,.13,v*.55);nz(t,o,'bandpass',2600,2,.02,v*.25)},
+  bass:function(t,o,m,dur,v){sus(t,o,'triangle',mf(m),dur,v*.55,{a:.01,r:.06,lp:700})},
+  pluck:function(t,o,m,dur,v){sus(t,o,'sawtooth',mf(m),dur,v*.12,{a:.004,r:dur*.8,lp:3200,lp2:350})},
+  piano:function(t,o,m,dur,v){sus(t,o,'triangle',mf(m),dur,v*.22,{a:.004,r:dur*.85});sus(t,o,'sine',mf(m+12),dur*.6,v*.08,{a:.004,r:dur*.5})},
+  vox:function(t,o,m,dur,v,br){sus(t,o,'sawtooth',mf(m),dur,v*(br?.5:.38),{a:.06,r:.12,vib:18,formant:br?1.15:1})},
+  brass:function(t,o,m,dur,v){sus(t,o,'sawtooth',mf(m),dur,v*.16,{a:.03,r:.07,lp:2600,lp2:900})},
+  acc:function(t,o,m,dur,v){sus(t,o,'square',mf(m),dur,v*.07,{a:.03,r:.06,lp:2400,vib:6});sus(t,o,'square',mf(m)*1.004,dur,v*.06,{a:.03,r:.06,lp:2400})},
+  shk:function(t,o,v){nz(t,o,'highpass',6500,1,.04,v*.3)},
+  clap:function(t,o,v){for(var i=0;i<3;i++)nz(t+i*.011,o,'bandpass',1500,1.1,.02,v*.5);nz(t+.033,o,'bandpass',1400,1,.09,v*.35)},
+  llam:function(t,o,v){tone(t,o,'sine',190,165,.16,v*.6);nz(t,o,'bandpass',900,1.5,.03,v*.3)}
+};
+function rng(seed){var a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+var C={F:{n:[57,60,65],r:41},Csm:{n:[61,64,68],r:37},Dm2:{n:[62,65,69],r:38},Db:{n:[61,65,68],r:37},Bm:{n:[59,62,66],r:47},Am:{n:[57,60,64],r:45},Dm:{n:[57,62,65],r:50},E7:{n:[56,59,62],r:40},D:{n:[57,62,66],r:50},G:{n:[55,59,62],r:43},A7:{n:[55,61,64],r:45},Cm:{n:[55,60,63],r:36},Fm:{n:[56,60,65],r:41},G7:{n:[55,59,65],r:43},F:{n:[57,60,65],r:41}};
+var GUIRO=[1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1],LONGS={0:1,4:1,8:1,12:1};
+/* partes de base (stems) */
+var STEM={
+  'Seguidor':function(s,t,o){var k=s%16;if(k===0||k===8)V.low(t,o,.9);if(k===4||k===12)V.high(t,o,.35)},
+  'Punteador':function(s,t,o){var k=s%16;if(k===2||k===6||k===10||k===14)V.high(t,o,.6);if(k===7||k===15)V.low(t,o,.35)},
+  'Güiro':function(s,t,o){var k=s%16;if(GUIRO[k])V.scr(t,o,.8,LONGS[k])},
+  'Guacharaca':function(s,t,o){var k=s%16;if(GUIRO[k])V.scr(t,o,.9,LONGS[k])},
+  'Bajo':function(s,t,o,tr){var k=s%16,ch=chord(tr,s);
+    if(tr.g==='plena'){if(k===0)V.bass(t,o,ch.r,tr.spb*6,1);if(k===8)V.bass(t,o,ch.r+7,tr.spb*6,1)}
+    else{if(k===0||k===8)V.bass(t,o,ch.r,tr.spb*5,1);if(k===6||k===14)V.bass(t,o,ch.r+7,tr.spb*2,1)}},
+  'Cuatro':function(s,t,o,tr){var k=s%16,ch=chord(tr,s),pos=[0,3,6,8,11,14].indexOf(k);if(pos>=0)V.pluck(t,o,ch.n[pos%3]+12,tr.spb*3,1)},
+  'Clave':function(s,t,o){var k=s%16;if(k===2||k===4||k===8||k===11||k===14)V.clave(t,o,1)},
+  'Campana':function(s,t,o){if(s%4===0)V.bell(t,o,s%8===0?1:.7)},
+  'Congas':function(s,t,o){var k=s%16;if(k===6||k===7||k===14||k===15)V.conga(t,o,1,'o');else if(k===2||k===10)V.conga(t,o,1,'s');else if(k%2===0)V.conga(t,o,1,'l')},
+  'Piano':function(s,t,o,tr){var k=s%16,ch=chord(tr,s);if([0,2,3,5,7,8,10,11,13,15].indexOf(k)>=0){var n=ch.n[(k*2)%3]+12;V.piano(t,o,n,tr.spb*1.6,1);if(k%3===0)V.piano(t,o,n+12,tr.spb*1.2,.6)}},
+  'Tambora':function(s,t,o){var k=s%16;if(k===0||k===8)V.low(t,o,.8);if(k===4||k===12)V.conga(t,o,.6,'s')},
+  'Alegre':function(s,t,o){var k=s%16;if(k===6||k===14)V.conga(t,o,.9,'o');if(k===10)V.conga(t,o,.8,'s')},
+  'Tambor alegre':function(s,t,o){var k=s%12,b=Math.floor(s/12);if(k===0)V.conga(t,o,.8,'l');if(k===2||k===8)V.conga(t,o,.8,'s');if(k===4||k===6||k===10)V.conga(t,o,.9,'o');if(b%4===3&&(k===9||k===11))V.conga(t,o,.7,'s')},
+  'Llamador':function(s,t,o){var k=s%12;if(k===3||k===9)V.llam(t,o,1)},
+  'Palmas':function(s,t,o){var k=s%12;if(k%3===0)V.clap(t,o,k%6===0?1:.6)},
+  'Maracas':function(s,t,o){V.shk(t,o,s%3===0?1:.45)},
+  'Acordes':function(s,t,o,tr){var k=s%16,ch=chord(tr,s);if(k%4===2)ch.n.forEach(function(n){V.pluck(t,o,n+12,tr.spb*1.2,.8)})}
+};
+/* partes que la gente graba encima */
+var PART={
+  'Pregón':function(s,t,o,tr,r){melody(s,t,o,tr,r,'vox',true)},
+  'Voz':function(s,t,o,tr,r){melody(s,t,o,tr,r,'vox',true)},
+  'Coro':function(s,t,o,tr){var n=tr.n,b=Math.floor(s/n),k=s%n;if(b%2===1&&(k===0||k===n/2)){var ch=chord(tr,s);ch.n.forEach(function(m){V.vox(t,o,m+12,tr.spb*(n/2-1),.55,false)})}},
+  'Cantadora':function(s,t,o,tr,r){melody(s,t,o,tr,r,'vox',true)},
+  'Tambor alegre':function(s,t,o,tr,r){var k=s%tr.n;if(r()>(k%3?0.55:0.35))V.conga(t,o,.6+r()*.4,r()>.5?'o':'s')},
+  'Palmas':function(s,t,o){STEM['Palmas'](s,t,o)},
+  'Llamador':function(s,t,o){STEM['Llamador'](s,t,o)},
+  'Requinto':function(s,t,o,tr,r){var k=s%16;if(r()>(k%2?0.45:0.7))V.req(t,o,.5+r()*.5)},
+  'Pandero seguidor':function(s,t,o){STEM['Seguidor'](s,t,o)},
+  'Pandero punteador':function(s,t,o){STEM['Punteador'](s,t,o)},
+  'Güiro':function(s,t,o){STEM['Güiro'](s,t,o)},
+  'Guacharaca':function(s,t,o){STEM['Guacharaca'](s,t,o)},
+  'Cuatro':function(s,t,o,tr,r){var b=Math.floor(s/16),k=s%16;if(b%2===0&&k<8){var ch=chord(tr,s);V.pluck(t,o,ch.n[Math.floor(r()*3)]+24,tr.spb*1.5,1)}},
+  'Bongó':function(s,t,o){var k=s%16;if(k%2===0)V.bongo(t,o,k===6||k===14?.9:.5,k===6||k===14)},
+  'Trompeta':function(s,t,o,tr){var b=Math.floor(s/16),k=s%16;if(b%2===1&&(k===0||k===3||k===6)){var ch=chord(tr,s);ch.n.forEach(function(n){V.brass(t,o,n+12,tr.spb*(k===6?4:2),1)})}},
+  'Acordeón':function(s,t,o,tr,r){melody(s,t,o,tr,r,'acc',false)},
+  'Guitarra':function(s,t,o,tr,r){var k=s%tr.n,ch=chord(tr,s);if([0,3,6,10,12].indexOf(k)>=0)V.pluck(t,o,ch.n[Math.floor(r()*3)]+12,tr.spb*2,1)},
+  'Percusión':function(s,t,o){V.shk(t,o,s%4===0?1:.5)},
+  'Otro':function(s,t,o){V.shk(t,o,s%4===0?1:.5)}
+};
+function melody(s,t,o,tr,r,inst,br){var h=tr.n/2,b=Math.floor(s/tr.n),k=s%tr.n;if(b%2!==0||k>h+2||k%2)return;var ch=chord(tr,s);var n=ch.n[Math.floor(r()*3)]+12+(r()>.8?2:0);var dur=k===h?tr.spb*(h-2):tr.spb*2;if(r()>.15)V[inst](t,o,n,dur,1,br)}
+function chord(tr,s){return C[tr.prog[Math.floor(s/tr.n)%4]]}
+
+var GEN={plena:{name:'Plena',stems:['Seguidor','Punteador','Güiro','Bajo','Cuatro'],parts:['Pregón','Coro','Pandero seguidor','Pandero punteador','Requinto','Güiro','Cuatro','Otro']},
+  bomba:{name:'Bomba',stems:[],parts:['Voz','Coro','Buleador','Subidor','Cuá','Maraca','Otro']},
+  bullerengue:{name:'Bullerengue',stems:['Tambor alegre','Llamador','Palmas','Maracas'],parts:['Cantadora','Coro','Tambor alegre','Palmas','Llamador','Otro']},
+  bossa:{name:'Bossa nova',stems:[],parts:['Voz','Coro','Guitarra','Percusión','Otro']}};
+var TRACKS=[
+  {id:'pe',g:'plena',name:'El Pescador',cover:'img/el-pescador.jpg',bpm:92,key:'Si menor',prog:['Bm','Bm','Bm','Bm'],audio:'au/el-pescador.mp3',len:200.1,offset:.255,stems:[{n:'Seguidor',u:'au/pescador-seguidor.mp3'},{n:'Punteador',u:'au/pescador-punteador.mp3'},{n:'Requinto',u:'au/pescador-requinto.mp3'},{n:'Güiro',u:'au/pescador-guiro.mp3'},{n:'Gaitas y alegre',u:'au/pescador-gaitas.mp3'},{n:'Voz guía',u:'au/pescador-guia.mp3',off:true}]},
+  {id:'ca',g:'plena',name:'Caliente',cover:'img/caliente.jpg',album:'Miércoles a las Siete',bpm:123,key:'Do# mayor',prog:['Db','Db','Db','Db'],audio:'au/caliente.mp3',len:171.7,offset:1.022},
+  {id:'gs',g:'plena',name:'Güiro solo',cover:'img/guiro-solo.jpg',bpm:114,key:'Sin tono, solo percusión',prog:['Am','Am','Am','Am'],audio:'au/guiro-114.mp3',len:176.8,offset:.998},
+  {id:'rp',g:'plena',name:'Rap plena',cover:'img/rap-plena.jpg',bpm:89,key:'Do menor',prog:['Cm','Cm','Cm','Cm'],audio:'au/rap-plena.mp3',len:171,offset:6.409},
+  {id:'py',g:'plena',name:'Perreo y To',cover:'img/perreo-y-to.jpg',album:'Miércoles a las Siete',bpm:96,key:'Do menor',prog:['Cm','Cm','Cm','Cm'],audio:'au/perreo-y-to.mp3',len:195.3,offset:.255},
+  {id:'ig',g:'plena',name:'En el campo yo nací',cover:'img/en-el-campo.jpg',by:'Ingrid · Taller Toca Plena',bpm:123,key:'Mib menor (por confirmar)',prog:['Ebm','Ebm','Ebm','Ebm'],audio:'au/ingrid-solo-plena.mp3',len:247.3,offset:.06},
+  {id:'in',g:'plena',name:'Inspiración',cover:'img/inspiracion.jpg',bpm:129,key:'',prog:['Am','Am','Am','Am'],audio:'au/inspiracion.mp3',len:226.5,offset:.743},
+  {id:'te',g:'bomba',name:'Te Equivocas',cover:'img/te-equivocas.jpg',by:'feat. Bomba Brava',bpm:89,key:'Fa mayor',prog:['F','F','F','F'],audio:'au/te-equivocas.mp3',len:187.8,offset:6.734},
+  {id:'ct',g:'bullerengue',name:'Rueda de Tambor',cover:'img/rueda-de-tambor.jpg',style:'Chalupa',bpm:129,key:'Re',prog:['Dm2','Dm2','Dm2','Dm2'],audio:'au/rueda-de-tambor.mp3',len:203.2,offset:.186},
+  {id:'ms',g:'bullerengue',name:'Mira el sol',cover:'img/mira-el-sol.jpg',bpm:117,key:'Do# menor',prog:['Csm','Csm','Csm','Csm'],audio:'au/mira-el-sol.mp3',len:157.6,offset:7.848},
+  {id:'rn',g:'bossa',name:'Rio à Noite',bpm:129,key:'Re mayor',prog:['D','D','D','D'],audio:'au/rio-noite.mp3',len:180,offset:.209},];
+TRACKS.forEach(function(t){t.n=t.n||16;t.by=t.by||(t.g==='plena'?'Taller Toca Plena':'Llameo');t.spb=60/t.bpm/(t.n/4);t.len=t.len||t.bars*t.n*t.spb});
+function credit(t){if(t.style)return t.by+' · estilo '+t.style.toLowerCase();return t.album?t.by+' · disco «'+t.album+'»':t.by}
+function sq(t){return t.cover?'<span class="sq cvsq" role="img" aria-label="Portada de '+esc(t.name)+'" style="background-image:url('+t.cover+')"></span>':'<span class="sq '+t.g+'">'+GEN[t.g].name[0]+'</span>'}
+function meta(t){return t.bpm+' BPM'+(t.n===12?' · 6/8':'')}
+function TR(id){for(var i=0;i<TRACKS.length;i++)if(TRACKS[i].id===id)return TRACKS[i]}
+
+/* reproductor: base + capas, cada una con su volumen */
+var P={on:false,timer:null,raf:null};
+var BUF={},PLAYID=0;
+function loadBuf(url){if(!BUF[url])BUF[url]=fetch(url).then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()}).then(function(a){return new Promise(function(res,rej){AC.decodeAudioData(a,res,rej)})}).catch(function(e){delete BUF[url];throw e});return BUF[url]}
+function play(cfg){stopAll();ac();var id=++PLAYID,rate=cfg.rate||1;
+  var need=(cfg.items||[]).filter(function(it){return it.url&&!it.stream&&!(rate!==1&&it.kind==='stem')});
+  var strm=(cfg.items||[]).filter(function(it){return it.url&&(it.stream||(rate!==1&&it.kind==='stem'))});
+  if(!need.length&&!strm.length){start(cfg);return}
+  P={on:false,cfg:{onStop:cfg.onStop}};
+  var ps=need.map(function(it){return loadBuf(it.url).then(function(b){it._b=b})}).concat(strm.map(function(it){var el=new Audio(it.url);el.preload='auto';el.preservesPitch=true;it._el=el;
+    return new Promise(function(res){if(el.readyState>=3)return res();el.addEventListener('canplaythrough',res,{once:true});el.addEventListener('error',res,{once:true});setTimeout(res,8000);el.load()})}));
+  Promise.all(ps).then(function(){if(id===PLAYID)start(cfg)},function(){if(id===PLAYID){stopAll();toast('No pude cargar el audio del ritmo.')}})}
+function start(cfg){var tr=cfg.track,rate=cfg.rate||1,spb=tr.spb/rate,beat=spb*tr.n/4,lead=cfg.countIn?beat*4:0,off=(tr.offset||0)/rate,now=AC.currentTime+.12;
+  var t0=now+Math.max(0,lead-off),ts=t0+off,dur=tr.len/rate;
+  P={on:true,els:[],cfg:cfg,spb:spb,t0:t0,ts:ts,lead:lead,beat:beat,total:Math.ceil((dur-off)/spb),next:0,items:[],dur:dur};
+  P.tr=Object.assign({},tr,{spb:spb});
+  if(cfg.countIn){for(var i=0;i<4;i++)V.clave(ts-lead+i*beat,MASTER,i===0?1.1:.7)}
+  (cfg.items||[]).forEach(function(it){var g=AC.createGain();g.gain.value=it.on===false?0:(it.vol==null?1:it.vol);g.connect(MASTER);var x={it:it,g:g,r:rng(it.seed||1)};
+    var b=it.buf||(it.url&&!it._el?it._b:null);
+    if(b){var src=AC.createBufferSource();src.buffer=b;if(it.kind!=='stem'&&rate!==1)src.playbackRate.value=rate;src.connect(g);src.start(t0);x.src=src}
+    else if(it.url){var el=it._el||new Audio(it.url);el.preservesPitch=true;AC.createMediaElementSource(el).connect(g);x.el=el;P.els.push(el)}
+    P.items.push(x)});
+  if(P.els.length)setTimeout(function(){if(P.on)P.els.forEach(function(e){e.currentTime=0;e.playbackRate=rate;e.play()})},Math.max(0,(t0-AC.currentTime)*1000));
+  P.timer=setInterval(tick,25);tick();loop()}
+function tick(){if(!P.on)return;var ahead=AC.currentTime+.15;
+  while(P.next<P.total&&P.ts+P.next*P.spb<ahead){var t=P.ts+P.next*P.spb,s=P.next;
+    P.items.forEach(function(x){if(x.it.buf||x.it.url)return;var fn=x.it.kind==='stem'?STEM[x.it.name]:PART[x.it.name];if(fn)fn(s,t,x.g,P.tr,x.r)});P.next++}}
+function pos(){if(!P.on)return 0;return Math.max(0,Math.min(1,(AC.currentTime-P.t0)/P.dur))}
+function loop(){if(!P.on)return;var p=pos(),el=AC.currentTime-P.t0;if(P.cfg.onTick)P.cfg.onTick(p,el);if(AC.currentTime>P.t0+P.dur+.3){var cb=P.cfg.onEnd;stopAll();if(cb)cb();return}P.raf=requestAnimationFrame(loop)}
+function stopAll(){PLAYID++;if(P.timer)clearInterval(P.timer);if(P.raf)cancelAnimationFrame(P.raf);if(P.items)P.items.forEach(function(x){try{x.src&&x.src.stop();x.el&&x.el.pause()}catch(e){}try{x.g.gain.setTargetAtTime(0,AC.currentTime,.02);setTimeout(function(){x.g.disconnect()},300)}catch(e){}});var cb=P.cfg&&P.cfg.onStop;P={on:false};if(cb)cb()}
+function setOn(key,on){if(!P.on)return;P.items.forEach(function(x){if(x.it.key===key)x.g.gain.setTargetAtTime(on?(x.it.vol==null?1:x.it.vol):0,AC.currentTime,.03)})}
+function defOff(t){var o={};(t.stems||[]).forEach(function(s){if(s.off)o[s.n]=true});return o}
+function setVol(key,v){if(!P.on)return;P.items.forEach(function(x){if(x.it.key===key)x.g.gain.setTargetAtTime(v,AC.currentTime,.03)})}
+function baseItems(tr,off,useStems){if(tr.audio&&useStems&&tr.stems)return tr.stems.map(function(x){return{kind:'stem',name:x.n,url:x.u,stream:true,key:'stem:'+x.n,vol:1.9,on:!(off&&off[x.n])}});if(tr.audio)return[{kind:'stem',name:'Ritmo',url:tr.audio,key:'stem:base',on:true}];return GEN[tr.g].stems.map(function(n){return{kind:'stem',name:n,key:'stem:'+n,on:!(off&&off[n])}})}
+
+/* ---------------- datos de ejemplo ---------------- */
+var COL=['#2ba6ec','#f0b429','#e5321f','#7fd1ae','#c9a3f2','#f28b6b','#9fb4c9'];
+function avc(n){var h=0;for(var i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))>>>0;return COL[h%COL.length]}
+function ini(n){return n==='Tú'?'TÚ':n.split(' ').map(function(w){return w[0]}).join('').slice(0,2).toUpperCase()}
+var LL=[
+ {id:'l1',title:'El Pescador en plena',track:'pe',owner:'JuanYo',ago:'Hace 1 h',need:['Coro','Requinto'],items:[
+  {t:'take',by:'JuanYo',part:'Pregón',url:'au/pescador-voz.mp3',peaks:[0.0,0.01,0.0,0.02,0.43,0.65,0.56,0.59,0.47,0.47,0.65,0.42,0.02,0.06,0.67,0.52,0.72,0.48,0.71,0.37,0.67,0.11,0.07,0.0,0.01,0.04,0.18,0.17,0.0,0.01,0.01,0.06,1.0,0.11],ago:'Hace 1 h',note:'Ahí les dejo la voz. Móntense con el coro y el requinto.'}]},
+ {id:'l5',title:'Rap plena: tírate un verso',track:'rp',owner:'JuanYo',ago:'Ahora',need:['Pregón','Coro'],items:[
+  {t:'msg',by:'JuanYo',text:'Ritmo abierto. Tírense un verso de rap o un coro de plena encima.',ago:'Ahora'}]},
+ {id:'l6',title:'Rueda de Tambor: entra a la rueda',track:'ct',owner:'JuanYo',ago:'Ahora',need:['Cantadora','Coro'],items:[
+  {t:'msg',by:'JuanYo',text:'Chalupa abierta. Cantadora y coro, a la rueda.',ago:'Ahora'}]},
+ {id:'l7',title:'Mira el sol: súmate',track:'ms',owner:'JuanYo',ago:'Ahora',need:['Cantadora','Coro','Tambor alegre'],items:[
+  {t:'msg',by:'JuanYo',text:'Ritmo abierto. Que se oiga la cantadora y el coro.',ago:'Ahora'}]},];
+var MINE=[];var gsel='all',psel='all';
+
+/* ---------------- navegación ---------------- */
+var now='welcome',hist=[];
+var NAVTAB={home:'home',thread:'home',practice:'practice',pdetail:'practice',classes:'classes',module:'classes',player:'classes',profile:'profile',plans:'profile',community:'community',cpost:'community',cnew:'community'};
+var WIDE=matchMedia('(min-width:900px)');var NONAV=WIDE.matches?{welcome:1,register:1,login:1}:{welcome:1,thread:1,rec:1,review:1,register:1,login:1};
+function go(id,noPush){if(id===now)return;if(typeof vnStop==='function')vnStop();if(!noPush)hist.push(now);if(!(id==='review'||now==='rec'&&id==='review'))stopAll();if(id!=='player')au.pause();
+  document.querySelectorAll('.scr').forEach(function(s){s.classList.toggle('on',s.id===id)});now=id;
+  $('#nav').hidden=!!NONAV[id];var tab=NAVTAB[id];document.querySelectorAll('#nav button').forEach(function(b){b.setAttribute('aria-current',b.dataset.go===tab?'true':'false')});
+  var el=document.getElementById(id);el.scrollTop=0;if(R[id])R[id]()}
+document.addEventListener('click',function(e){var b=e.target.closest('[data-go]');if(b){e.preventDefault();go(b.dataset.go)}});
+var tt;function toast(m){var t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(function(){t.hidden=true},2600)}
+var R={};
+
+/* ---------------- Llameo (inicio) ---------------- */
+function chipsFor(el,val,cb){var opts=[['all','Todos los géneros']].concat(Object.keys(GEN).map(function(g){return[g,GEN[g].name]}));
+  function cnt(g){var n=TRACKS.filter(function(t){return g==='all'||t.g===g}).length;return n+(n===1?' ritmo':' ritmos')}
+  var curO=opts.filter(function(o){return o[0]===val})[0];
+  el.innerHTML='<button class="gbtn" aria-haspopup="listbox" aria-expanded="false"><span class="gdot '+val+'"></span><span class="l">'+curO[1]+'</span><span class="mono" style="color:var(--mut)">'+cnt(val).toUpperCase()+'</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button><div class="gmenu" role="listbox" aria-label="Género" hidden>'+
+   opts.map(function(o){return'<button role="option" data-v="'+o[0]+'" aria-selected="'+(o[0]===val)+'"><span class="gdot '+o[0]+'"></span><span class="l">'+o[1]+'</span><span class="c">'+cnt(o[0])+'</span></button>'}).join('')+'</div>';
+  var btn=el.querySelector('.gbtn'),menu=el.querySelector('.gmenu');
+  btn.onclick=function(e){e.stopPropagation();var open=menu.hidden;menu.hidden=!open;btn.setAttribute('aria-expanded',open)};
+  menu.onclick=function(e){var b=e.target.closest('[data-v]');if(b){e.stopPropagation();cb(b.dataset.v)}}}
+document.addEventListener('click',function(){document.querySelectorAll('.gmenu').forEach(function(m){if(!m.hidden){m.hidden=true;m.previousElementSibling.setAttribute('aria-expanded','false')}})});
+var preview=null;
+R.home=function(){chipsFor($('#gfilter'),gsel,function(v){gsel=v;R.home()});
+  var tk=TRACKS.filter(function(t){return gsel==='all'||t.g===gsel});
+  $('#tracks').innerHTML=tk.map(function(t){return'<div class="tcard '+t.g+'"><button class="face'+(t.cover?' cv" style="background-image:url('+t.cover+')':'')+'" data-prev="'+t.id+'" aria-label="Escuchar '+esc(t.name)+'">'+(t.cover?'':'<span class="gw'+(GEN[t.g].name.length>7?' long':'')+'">'+GEN[t.g].name+'</span>')+'<span class="mono">'+meta(t)+'</span><span class="pb">'+(preview===t.id?ICON.pause:ICON.play)+'</span></button><div class="body"><b>'+esc(t.name)+'</b><span class="mut" style="font-size:13px;margin-top:-6px">'+esc(credit(t))+' · '+fmt(t.len)+'</span><button class="open" data-new="'+t.id+'">Abrir un llameo</button></div></div>'}).join('');
+  var ll=LL.filter(function(l){return gsel==='all'||TR(l.track).g===gsel});
+  $('#llist').innerHTML=ll.length?ll.map(lcard).join(''):'<p class="mut">Todavía no hay llameos de este género. Abre el primero desde un ritmo.</p>'};
+function takes(l){return l.items.filter(function(i){return i.t==='take'})}
+function lcard(l){var tr=TR(l.track),tk=takes(l),ppl=[];tk.forEach(function(x){if(ppl.indexOf(x.by)<0)ppl.push(x.by)});
+  return'<button class="lcard" data-open="'+l.id+'">'+(tr.cover?'<img class="cvban" style="border-radius:12px" src="'+tr.cover+'" alt="Portada de '+esc(tr.name)+'">':'')+'<div class="row between"><span class="gp '+tr.g+'">'+GEN[tr.g].name+'</span><span class="mut" style="font-size:13px">'+l.ago+'</span></div><h3>'+esc(l.title)+'</h3><span class="mono" style="color:var(--mut)">'+esc(tr.name).toUpperCase()+'</span>'+
+  '<div class="row between"><div class="row"><div class="avs">'+ppl.slice(0,4).map(function(p){return'<span class="av" style="background:'+avc(p)+'">'+ini(p)+'</span>'}).join('')+'</div><span class="mut" style="font-size:13px">'+tk.length+(tk.length===1?' toma':' tomas')+'</span></div></div>'+
+  (l.need.length?'<div class="row" style="flex-wrap:wrap;gap:6px"><span class="mut" style="font-size:13px">Falta</span>'+l.need.map(function(n){return'<span class="need">'+esc(n)+'</span>'}).join('')+'</div>':'')+'</button>'}
+$('#home').addEventListener('click',function(e){var b=e.target.closest('[data-prev]');if(b){var id=b.dataset.prev;if(preview===id){stopAll()}else{var tr=TR(id);preview=id;play({track:tr,items:baseItems(tr),onEnd:function(){},onStop:function(){preview=null;if(now==='home')R.home()}});R.home()}return}
+  b=e.target.closest('[data-new]');if(b){startRec({mode:'new',track:TR(b.dataset.new)});return}
+  b=e.target.closest('[data-open]');if(b)openLL(b.dataset.open)});
+
+/* ---------------- hilo ---------------- */
+var cur=null,tplaying=false;
+function LLget(id){for(var i=0;i<LL.length;i++)if(LL[i].id===id)return LL[i]}
+function openLL(id){TF='all';TMODE='all';document.querySelectorAll('#tmode button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.m==='all')});cur=LLget(id);go('thread')}
+function waveHTML(seed,n){var r=rng(seed*97+3),h='';for(var i=0;i<n;i++){var v=.25+.75*Math.abs(Math.sin(i*.55+seed))*(.5+r()*.5);h+='<i style="height:'+Math.round(v*28+2)+'px"></i>'}return h}
+R.thread=function(){var l=cur,tr=TR(l.track);$('#tgenre').innerHTML='<span class="gp '+tr.g+'">'+GEN[tr.g].name+'</span>';$('#ttitle').textContent=l.title;
+  var tk=takes(l);$('#tinfo').textContent=fmt(tr.len)+' · '+tk.length+(tk.length===1?' toma':' tomas');setPlay($('#tplay'),false);$('#tfill').style.width='0';$('#tcur').textContent='0:00';renderChat();
+  setTimeout(function(){var c=$('#chat');c.scrollTop=c.scrollHeight},30)};
+var TF='all',TMODE='all';
+function renderChat(){var l=cur,tr=TR(l.track),h='',n=0;document.querySelectorAll('#tfilt button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.tf===TF)});var nm=l.items.filter(function(x){return x.t==='msg'}).length,ppl=[];l.items.forEach(function(x){if(ppl.indexOf(x.by)<0)ppl.push(x.by)});$('#tfilt [data-tf=chat]').textContent='Chat ('+nm+')';$('#tppl').textContent=ppl.length+(ppl.length===1?' persona':' personas')+' en este llameo';
+  if(tr.cover)h+='<img class="cvban" src="'+tr.cover+'" alt="Portada de '+esc(tr.name)+'">';h+='<div class="base">'+sq(tr)+'<div style="flex:1;min-width:0"><b>Ritmo base</b><div class="mut" style="font-size:13px">'+esc(tr.name)+' · '+esc(credit(tr))+'</div><div class="mono" style="color:var(--mut);margin-top:3px">'+meta(tr)+'</div></div></div>';
+  h+='<div class="sys">'+esc(l.owner)+' abrió este llameo</div>';
+  l.items.forEach(function(it,i){var me=it.by==='Tú';if(TF==='takes'&&it.t==='msg')return;if(TF==='chat'&&it.t!=='msg')return;
+    if(it.t==='msg'){h+='<div class="msg'+(me?' me':'')+'"><span class="av" style="background:'+avc(it.by)+'">'+ini(it.by)+'</span><div class="bub"><div class="bh"><b>'+esc(it.by)+'</b><span class="mut" style="font-size:12px">'+it.ago+'</span></div><div class="note">'+esc(it.text)+'</div></div></div>';return}
+    var under=n===0?'sobre el ritmo':'sobre el ritmo + '+n+(n===1?' toma':' tomas');n++;
+    h+='<div class="msg'+(me?' me':'')+(it.on===false?' off':'')+'" data-i="'+i+'"><span class="av" style="background:'+avc(it.by)+'">'+ini(it.by)+'</span><div class="bub"><div class="bh"><b>'+esc(it.by)+'</b><span class="part">'+esc(it.part)+'</span><span class="mut" style="font-size:12px">'+it.ago+'</span></div><div class="wv" data-wv>'+(it.peaks?it.peaks.map(function(v){return'<i style="height:'+Math.round(3+v*27)+'px"></i>'}).join(''):waveHTML(it.seed||9,34))+'</div><div class="bf"><span class="mono" style="color:var(--mut)">'+under.toUpperCase()+'</span><button class="inmix" data-mix="'+i+'" aria-pressed="'+(it.on!==false)+'">'+(it.on!==false?'En la mezcla':'Silenciada')+'</button></div>'+(it.note?'<div class="note">'+esc(it.note)+'</div>':'')+'</div></div>'});
+  if(TF==='chat'&&!l.items.some(function(x){return x.t==='msg'}))h+='<div class="sys">Todavía no hay mensajes. Saluda al grupo o pregunta quién se monta.</div>';
+  if(TF!=='chat'&&l.need.length)h+='<div class="sys">Falta: '+l.need.map(esc).join(', ')+'. Toca «Móntate» para grabar encima de todo.</div>';
+  $('#chat').innerHTML=h}
+function threadItems(l,extra){var tr=TR(l.track),its=baseItems(tr);l.items.forEach(function(it,i){if(it.t!=='take')return;its.push({kind:'part',name:it.snd||it.part,seed:it.seed,buf:it.buf,url:it.url,key:'take:'+i,on:it.on!==false})});return its.concat(extra||[])}
+$('#tplay').onclick=function(){if(tplaying){stopAll();return}var l=cur,tr=TR(l.track);tplaying=true;setPlay($('#tplay'),true);
+  play({track:tr,items:threadItems(l).filter(function(x){return !(TMODE==='base'&&x.kind==='part')}),onTick:function(p,el){$('#tfill').style.width=(p*100)+'%';$('#tcur').textContent=fmt(el);document.querySelectorAll('#chat [data-wv]').forEach(function(w){var bars=w.children,k=Math.round(p*bars.length);for(var i=0;i<bars.length;i++)bars[i].classList.toggle('f',i<k)})},
+    onStop:function(){tplaying=false;setPlay($('#tplay'),false)}})};
+$('#chat').addEventListener('click',function(e){var b=e.target.closest('[data-mix]');if(!b)return;var i=+b.dataset.mix,it=cur.items[i];it.on=it.on===false;setVol('take:'+i,it.on?1:0);renderChat()});
+$('#tback').onclick=function(){go('home')};
+$('#tmode').onclick=function(e){var b=e.target.closest('[data-m]');if(!b)return;TMODE=b.dataset.m;document.querySelectorAll('#tmode button').forEach(function(x){x.setAttribute('aria-pressed',x===b)});if(tplaying){stopAll();$('#tplay').click()}};
+$('#tfilt').onclick=function(e){var b=e.target.closest('[data-tf]');if(!b)return;TF=b.dataset.tf;renderChat();var c=$('#chat');c.scrollTop=TF==='chat'?c.scrollHeight:0};
+$('#composer').addEventListener('submit',function(e){e.preventDefault();if(needAcc())return;var v=$('#ctext').value.trim();if(!v)return;cur.items.push({t:'msg',by:'Tú',text:v,ago:'Ahora'});$('#ctext').value='';renderChat();var c=$('#chat');c.scrollTop=c.scrollHeight});
+$('#cmonta').onclick=function(){startRec({mode:'join',ll:cur,track:TR(cur.track)})};
+$('#tinvite').onclick=function(){var slug=cur.title.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  var sh=document.createElement('div');sh.className='shade';var wa='https://wa.me/?text='+encodeURIComponent('Móntate conmigo en «'+cur.title+'» en Llameo: https://llameo.app/l/'+slug);sh.innerHTML='<div class="sheet" role="dialog" aria-label="Llamar gente"><h3>Llama gente a este llameo</h3><p class="mut">Comparte el enlace. Quien lo abra puede escuchar, montarse con su parte y escribir en el chat del llameo.</p><a class="btn" style="background:#25d366;color:#07090c;text-decoration:none" href="'+wa+'" target="_blank" rel="noopener">Compartir por WhatsApp</a><div class="linkbox"><span id="lk">llameo.app/l/'+slug+'</span><button id="lkc">Copiar</button></div><p class="mut" style="font-size:12px">En la app también sale el menú de compartir del teléfono: Instagram, mensajes y más.</p><button class="btn alt" id="lkx">Cerrar</button></div>';
+  $('#app').appendChild(sh);sh.onclick=function(e){if(e.target===sh||e.target.id==='lkx')sh.remove()};
+  $('#lkc').onclick=function(){var txt=$('#lk').textContent,b=this;function ok(){b.textContent='Copiado'}try{navigator.clipboard.writeText(txt).then(ok,function(){sel()})}catch(e){sel()}function sel(){var r=document.createRange();r.selectNodeContents($('#lk'));var s=getSelection();s.removeAllRanges();s.addRange(r)}}};
+
+/* ---------------- grabar ---------------- */
+var RS=null;
+function label(){return RS.part==='Otro'&&$('#rother').value.trim()||RS.part}
+function startRec(o){if(o.mode!=='private'&&needAcc(function(){startRec(o)}))return;$('#rother').value='';RS={mode:o.mode,ll:o.ll||null,track:o.track,part:GEN[o.track.g].parts[0],hear:{},rate:o.rate||1,off:o.off||{},buf:null,seed:0};
+  if(o.mode==='join'&&o.ll.need.length&&GEN[o.track.g].parts.indexOf(o.ll.need[0])>=0)RS.part=o.ll.need[0];go('rec')}
+R.rec=function(){var tr=RS.track;var rc=$('#rcover');rc.hidden=!tr.cover;if(tr.cover){rc.src=tr.cover;rc.alt='Portada de '+tr.name}$('#rtitle').textContent=RS.mode==='private'?'Graba en privado':'Móntate';
+  $('#rsub').textContent=(RS.mode==='join'?'en «'+RS.ll.title+'»':RS.mode==='new'?'Abres un llameo nuevo con «'+tr.name+'»':'sobre «'+tr.name+'»')+' · '+fmt(tr.len/(RS.rate||1));
+  $('#rparts').innerHTML=GEN[tr.g].parts.map(function(p){return'<button data-p="'+esc(p)+'" aria-pressed="'+(p===RS.part)+'">'+esc(p)+'</button>'}).join('');
+  var rows=[['base','Ritmo base · '+tr.name]];if(RS.ll)RS.ll.items.forEach(function(it,i){if(it.t==='take')rows.push(['take:'+i,it.by+' · '+it.part])});
+  $('#rhear').innerHTML=rows.map(function(r){var on=RS.hear[r[0]]!==false;return'<div class="hear"><span>'+esc(r[1])+'</span><button class="sw" role="switch" data-h="'+r[0]+'" aria-checked="'+on+'" aria-label="Oír '+esc(r[1])+'"></button></div>'}).join('');
+  $('#rotherbox').hidden=RS.part!=='Otro';recUI('idle')};
+$('#rparts').onclick=function(e){var b=e.target.closest('[data-p]');if(!b||RS.state==='rec')return;RS.part=b.dataset.p;R.rec()};
+$('#rhear').onclick=function(e){var b=e.target.closest('[data-h]');if(!b||RS.state==='rec')return;var k=b.dataset.h;RS.hear[k]=RS.hear[k]===false;b.setAttribute('aria-checked',RS.hear[k]!==false)};
+function recUI(s){RS.state=s;var b=$('#rbtn');b.classList.toggle('on',s==='rec'||s==='count');b.setAttribute('aria-label',s==='idle'?'Grabar':'Detener');if(s==='idle'){$('#rcount').textContent='';$('#rtime').textContent='0:00 / '+fmt(RS.track.len/RS.rate);$('#rfill').style.width='0'}}
+function hearItems(){var tr=RS.track,its=RS.hear.base===false?[]:baseItems(tr,RS.off,RS.mode==='private');if(RS.ll)threadItems(RS.ll).forEach(function(x){if(x.kind==='part'&&RS.hear[x.key]!==false)its.push(x)});return its}
+$('#rbtn').onclick=function(){if(RS.state==='idle'){RS.seed=Math.floor(Math.random()*9999)+1;RS.buf=null;recUI('count');var spb=RS.track.spb/RS.rate,t0=performance.now();
+    play({track:RS.track,rate:RS.rate,countIn:true,items:hearItems(),onTick:function(p,el){if(AC.currentTime<P.ts){$('#rcount').textContent=AC.currentTime<P.ts-P.lead?'':Math.max(1,Math.min(4,Math.floor((AC.currentTime-(P.ts-P.lead))/P.beat)+1))}else{if(RS.state==='count')recUI('rec');$('#rcount').textContent='';$('#rtime').textContent='● '+fmt(el)+' / '+fmt(P.dur);$('#rfill').style.width=(p*100)+'%';RS.len=el}},
+      onEnd:function(){toReview()},onStop:function(){if(RS.state==='count')recUI('idle')}})}
+  else if(RS.state==='rec'){stopAll();toReview()}else{stopAll();recUI('idle')}};
+$('#rback').onclick=function(){stopAll();RS.state='idle';go(RS.mode==='join'?'thread':RS.mode==='private'?'pdetail':'home')};
+$('#rfile').onchange=function(){var f=this.files[0];if(!f)return;ac();var rd=new FileReader();rd.onload=function(){AC.decodeAudioData(rd.result,function(b){RS.buf=b;RS.seed=7;RS.len=b.duration;stopAll();toReview(true)},function(){toast('No pude leer ese audio. Prueba con otro formato.')})};rd.readAsArrayBuffer(f);this.value=''};
+function toReview(){RS.state='done';go('review')}
+
+/* ---------------- revisar y aceptar ---------------- */
+var vplaying=false;
+R.review=function(){var m=RS.mode;$('#vtitle').textContent='¿Cómo quedó tu '+label().toLowerCase()+'?';$('#vlabel').textContent=RS.buf?'Tu audio con el llameo':'Tu toma con todo lo demás';
+  $('#vnamebox').hidden=m!=='new';if(m==='new'&&!$('#vname').value)$('#vname').value='Llameo de '+RS.track.name;
+  $('#vconsent').checked=false;$('#vshare').disabled=m!=='private';$('#vconsentbox').hidden=m==='private';
+  $('#vshare').textContent=m==='private'?'Guardar en mis tomas':m==='new'?'Abrir el llameo y compartir':'Compartir en el llameo';
+  $('#vprivate').textContent=m==='private'?'Abrir un llameo con esta toma':'Guardar en privado (solo tú la oyes)';
+  $('#vnotebox').hidden=m==='private';$('#vvol').value=100;setPlay($('#vplay'),false);$('#vfill').style.width='0'};
+function myItem(){return{kind:'part',name:RS.part,seed:RS.seed,buf:RS.buf,key:'mine',vol:$('#vvol').value/100}}
+$('#vplay').onclick=function(){if(vplaying){stopAll();return}vplaying=true;setPlay($('#vplay'),true);
+  play({track:RS.track,rate:RS.rate,items:hearItems().concat([myItem()]),onTick:function(p){$('#vfill').style.width=(p*100)+'%'},onStop:function(){vplaying=false;setPlay($('#vplay'),false)}})};
+$('#vvol').oninput=function(){setVol('mine',this.value/100)};
+$('#vconsent').onchange=function(){$('#vshare').disabled=!this.checked};
+$('#vredo').onclick=$('#vback').onclick=function(){stopAll();go('rec')};
+function takeObj(){return{t:'take',by:'Tú',part:label(),snd:RS.part,seed:RS.seed,buf:RS.buf,ago:'Ahora',note:$('#vnote').value.trim()}}
+$('#vshare').onclick=function(){stopAll();var m=RS.mode;if(m!=='private'&&needAcc(function(){go('review')}))return;
+  if(m==='private'){MINE.unshift({track:RS.track.id,part:label(),snd:RS.part,seed:RS.seed,buf:RS.buf,len:RS.len||RS.track.len});toast('Guardada en tus tomas privadas');hist=[];go('practice');return}
+  if(m==='new'){var name=$('#vname').value.trim()||RS.track.name;var l={id:'l'+Date.now(),title:name,track:RS.track.id,owner:'Tú',ago:'Ahora',need:GEN[RS.track.g].parts.slice(0,2).filter(function(p){return p!==RS.part}),items:[takeObj()]};LL.unshift(l);cur=l}
+  else{RS.ll.items.push(takeObj());RS.ll.need=RS.ll.need.filter(function(n){return n!==RS.part});RS.ll.ago='Ahora';cur=RS.ll}
+  $('#vnote').value='';$('#vname').value='';toast('Tu toma está en el llameo. Ya otros pueden montarse encima.');hist=['home'];go('thread',true)};
+$('#vprivate').onclick=function(){stopAll();if(RS.mode==='private'){RS.mode='new';R.review();return}
+  MINE.unshift({track:RS.track.id,part:label(),snd:RS.part,seed:RS.seed,buf:RS.buf,len:RS.len||RS.track.len});toast('Guardada en privado. Está en Práctica.');go(RS.mode==='join'?'thread':'home')};
+
+/* ---------------- práctica ---------------- */
+var PD={track:null,rate:1,off:{}},pdplaying=false;
+R.practice=function(){chipsFor($('#pfilter'),psel,function(v){psel=v;R.practice()});
+  $('#plist').innerHTML=TRACKS.filter(function(t){return psel==='all'||t.g===psel}).map(function(t){return'<button class="trow" data-pt="'+t.id+'">'+sq(t)+'<div><b>'+esc(t.name)+'</b><div class="mono" style="color:var(--mut);margin-top:3px">'+meta(t)+' · '+fmt(t.len)+'</div><div class="mut" style="font-size:12px;margin-top:3px">'+esc(credit(t))+'</div></div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>'}).join('');
+  $('#pmine').innerHTML=MINE.length?MINE.map(function(m,i){var t=TR(m.track);return'<div class="trow">'+sq(t)+'<div><b>'+esc(m.part)+'</b><div class="mut" style="font-size:13px">'+esc(t.name)+' · '+fmt(m.len)+'</div></div><button class="invite" data-mp="'+i+'">Escuchar</button></div>'}).join(''):'<p class="mut">Aún no tienes tomas privadas. Abre un ritmo y graba en privado.</p>'};
+$('#practice').addEventListener('click',function(e){var b=e.target.closest('[data-pt]');if(b){var tt_=TR(b.dataset.pt);PD={track:tt_,rate:1,off:defOff(tt_)};go('pdetail');return}
+  b=e.target.closest('[data-mp]');if(b){var m=MINE[+b.dataset.mp],tr=TR(m.track);if(P.on){stopAll();return}play({track:tr,items:baseItems(tr).concat([{kind:'part',name:m.snd||m.part,seed:m.seed,buf:m.buf,key:'m'}])});toast('Sonando tu toma con el ritmo')}});
+R.pdetail=function(){var t=PD.track;var pc=$('#pdcover');pc.hidden=!t.cover;if(t.cover){pc.src=t.cover;pc.alt='Portada de '+t.name}$('#pdg').innerHTML='<span class="gp '+t.g+'">'+GEN[t.g].name+'</span>';$('#pdt').textContent=t.name;$('#pdm').textContent=meta(t)+' · '+credit(t).toUpperCase();
+  document.querySelectorAll('#pdspeed button').forEach(function(b){b.setAttribute('aria-pressed',+b.dataset.s===PD.rate)});pdDur();setPlay($('#pdplay'),false);$('#pdfill').style.width='0';$('#pdcur').textContent='0:00';
+  $('#pdhint').hidden=!!t.audio&&!t.stems;$('#pdhint').textContent=t.stems?'Apaga el que vas a tocar tú. Prende la voz guía para aprenderte la letra.':'Apaga el que vas a tocar tú.';$('#pdstems').innerHTML=t.stems?t.stems.map(function(x){var on=!PD.off[x.n];return'<div class="hear"><span>'+esc(x.n)+'</span><button class="sw" role="switch" data-st="'+esc(x.n)+'" aria-checked="'+on+'" aria-label="'+esc(x.n)+'"></button></div>'}).join(''):t.audio?'<p class="mut" style="padding:10px 0;font-size:13px;line-height:1.45">Este ritmo viene completo, con todos los instrumentos juntos. Cuando tengas los canales separados, aquí podrás apagar el que vas a tocar.</p>':GEN[t.g].stems.map(function(n){var on=!PD.off[n];return'<div class="hear"><span>'+esc(n)+'</span><button class="sw" role="switch" data-st="'+esc(n)+'" aria-checked="'+on+'" aria-label="'+esc(n)+'"></button></div>'}).join('')};
+function pdDur(){$('#pddur').textContent=fmt(PD.track.len/PD.rate)}
+$('#pdplay').onclick=function(){if(pdplaying){stopAll();return}pdplaying=true;setPlay($('#pdplay'),true);
+  play({track:PD.track,rate:PD.rate,items:baseItems(PD.track,PD.off,true),onTick:function(p,el){$('#pdfill').style.width=(p*100)+'%';$('#pdcur').textContent=fmt(el)},onStop:function(){pdplaying=false;setPlay($('#pdplay'),false)}})};
+$('#pdstems').onclick=function(e){var b=e.target.closest('[data-st]');if(!b)return;var n=b.dataset.st;PD.off[n]=!PD.off[n];b.setAttribute('aria-checked',!PD.off[n]);setOn('stem:'+n,!PD.off[n])};
+$('#pdrec').onclick=function(){startRec({mode:'private',track:PD.track,rate:PD.rate,off:PD.off})};
+
+/* ---------------- clases ---------------- */
+var LT=['Introducción del Taller','Historia de la plena','Panderos','Afinación','Postura','Golpes','Seguidor','Punteador','Requinto','Güicharo','Práctica: Seguidor','Práctica: Punteador','Práctica: Requinto','Práctica: Güicharo'];
+var LD=[39,76,91,91,91,91,74,46,61,110,79,63,54,73],seen={},li=0,au=new Audio();au.preload='none';
+var LSTEM={6:'Seguidor',7:'Punteador',9:'Güiro',10:'Seguidor',11:'Punteador',13:'Güiro'};
+R.module=function(){$('#lessons').innerHTML=LT.map(function(t,i){return'<button class="les" data-l="'+i+'"><span class="num'+(seen[i]?' done':'')+'">'+(i+1)+'</span><span style="flex:1"><b>'+t+'</b><br><span class="mut" style="font-size:13px">'+fmt(LD[i])+'</span></span></button>'}).join('')};
+$('#lessons').onclick=function(e){var b=e.target.closest('[data-l]');if(!b)return;loadL(+b.dataset.l);go('player');lplay()};
+function loadL(i){li=i;au.src='au/'+('0'+(i+1)).slice(-2)+'.mp3';$('#lt').textContent=LT[i];$('#ldur').textContent=fmt(LD[i]);$('#lcur').textContent='0:00';$('#lfill').style.width='0';$('#lpractice').hidden=!(i in LSTEM)&&i!==8&&i!==12;setPlay($('#lplay'),false)}
+function lplay(){au.play().then(function(){setPlay($('#lplay'),true)},function(){setPlay($('#lplay'),false)})}
+$('#lplay').onclick=function(){if(au.paused)lplay();else{au.pause();setPlay($('#lplay'),false)}};
+$('#lprev').onclick=function(){if(li>0){loadL(li-1);lplay()}};$('#lnext').onclick=function(){if(li<13){loadL(li+1);lplay()}};
+au.ontimeupdate=function(){var d=au.duration||LD[li];$('#lcur').textContent=fmt(au.currentTime);$('#lfill').style.width=(au.currentTime/d*100)+'%';if(au.currentTime/d>.9)seen[li]=1};
+au.onloadedmetadata=function(){$('#ldur').textContent=fmt(au.duration)};au.onended=function(){seen[li]=1;setPlay($('#lplay'),false)};
+$('#lpractice').onclick=function(){au.pause();var t=TR('pe'),inst=LSTEM[li]||'Requinto',off=defOff(t);off[inst]=true;PD={track:t,rate:1,off:off};go('pdetail');toast('Apagamos el '+inst.toLowerCase()+' para que lo toques tú')};
+R.player=function(){};
+
+/* ---------------- comunidad ---------------- */
+var CAT={q:'Pregunta',s:'Compartir',a:'Aviso'},CF={filt:'all',q:'',open:null,ncat:'q',ngen:''},blocked={},nid=10;
+var PS=[
+ {id:1,cat:'a',pin:1,by:'Llameo',m:1,ti:'Bienvenidos a la comunidad',bo:'Aquí puedes hacer preguntas, compartir lo que estás aprendiendo y ayudar a quien empieza. Para montarte en un ritmo, ve a Llameo. Escribe con respeto.',w:'Hace 3 días',lk:12,rp:[]},
+ {id:2,cat:'q',g:'plena',by:'María L.',ti:'¿Cada cuánto debo afinar mi pandero?',bo:'Estoy en la clase de afinación y mi pandero se destempla rápido. ¿Cada cuánto lo revisan ustedes?',w:'Hace 2 h',lk:4,solved:1,rp:[{by:'Taller Toca Plena',m:1,best:1,bo:'Revísalo antes de cada práctica. Con el calor y la humedad el cuero cambia, así que afina poco a poco y vuelve a probar.'},{by:'Carlos R.',bo:'A mí me ayudó afinarlo siempre en el mismo lugar de la casa.'},{by:'Taller Toca Plena',m:1,bo:'Nota de voz',voice:{url:'au/04.mp3',dur:91,seed:4}}]},
+ {id:3,cat:'s',g:'plena',by:'Carlos R.',ti:'Dos semanas con el seguidor',bo:'Ya me sale el seguidor de El Pescador sin perderme. Lo que más me ayudó fue practicar con el seguidor apagado en Práctica.',w:'Ayer',lk:9,rp:[{by:'Yari M.',bo:'¡Eso! Ahora móntate en un llameo.'}]},
+ {id:4,cat:'q',g:'plena',by:'Yari M.',ti:'¿Cómo evito que se me canse la muñeca con el requinto?',bo:'Después de unos minutos me duele la muñeca. ¿Es la postura?',w:'Hace 3 días',lk:2,rp:[]}];
+function who(n,m){return'<b>'+esc(n)+'</b>'+(m?'<span class="badge">'+(n==='Llameo'?'Equipo':'Maestro')+'</span>':'')}
+function avt(n){return'<span class="av" style="background:'+(n==='Llameo'||n==='Taller Toca Plena'?'var(--red);color:#fff':avc(n))+'">'+(n==='Taller Toca Plena'?'TP':n==='Llameo'?'LL':ini(n))+'</span>'}
+function nrep(p){return p.rp.length+(p.rp.length===1?' respuesta':' respuestas')}
+function tags(p){return'<div class="row" style="flex-wrap:wrap;gap:6px"><span class="ctag">'+CAT[p.cat]+'</span>'+(p.g?'<span class="gp '+p.g+'">'+GEN[p.g].name+'</span>':'')+(p.solved?'<span class="ok">✓ Resuelta</span>':'')+'</div>'}
+function pcard(p){return'<button class="post" data-pid="'+p.id+'">'+(p.pin?'<span class="eyebrow">Fijado</span>':'')+'<div class="row">'+avt(p.by)+'<span style="flex:1;min-width:0">'+who(p.by,p.m)+'<br><span class="mut" style="font-size:12px">'+p.w+'</span></span></div><h3>'+esc(p.ti)+'</h3><p class="mut" style="font-size:14px;line-height:1.45">'+esc(p.bo.slice(0,120))+(p.bo.length>120?'…':'')+'</p>'+tags(p)+'<div class="pmeta"><span>♥ '+(p.lk+(p.liked?1:0))+'</span><span>'+nrep(p)+'</span></div></button>'}
+R.community=function(){$('#cchips').innerHTML=[['all','Todo'],['q','Preguntas'],['s','Compartir'],['a','Avisos']].map(function(c){return'<button class="chip" data-f="'+c[0]+'" aria-pressed="'+(c[0]===CF.filt)+'">'+c[1]+'</button>'}).join('');
+  var q=CF.q.toLowerCase(),L=PS.filter(function(p){return!blocked[p.by]&&(CF.filt==='all'||p.cat===CF.filt)&&(!q||(p.ti+' '+p.bo).toLowerCase().indexOf(q)>-1)}).sort(function(a,b){return(b.pin?1:0)-(a.pin?1:0)});
+  $('#cfeed').innerHTML=L.length?L.map(pcard).join(''):'<p class="mut">No hay publicaciones con ese filtro.</p>'};
+$('#cchips').onclick=function(e){var b=e.target.closest('[data-f]');if(b){CF.filt=b.dataset.f;R.community()}};
+$('#csearch').oninput=function(){CF.q=this.value;R.community()};
+$('#cfeed').onclick=function(e){var b=e.target.closest('[data-pid]');if(b){CF.open=+b.dataset.pid;go('cpost')}};
+function curPost(){return PS.filter(function(x){return x.id===CF.open})[0]}
+R.cpost=function(){vnStop();vnReset();var p=curPost();if(!p)return;
+  var h='<div class="row">'+avt(p.by)+'<span>'+who(p.by,p.m)+'<br><span class="mut" style="font-size:12px">'+p.w+'</span></span></div><h2 style="font-size:26px">'+esc(p.ti)+'</h2><p style="line-height:1.55">'+esc(p.bo)+'</p>'+tags(p)+
+   '<div class="acts"><button data-act="like" class="'+(p.liked?'on':'')+'">♥ '+(p.lk+(p.liked?1:0))+' Me gusta</button>'+(p.mine?'<button data-act="del">Eliminar</button>':'<button data-act="rep">Reportar</button><button data-act="blk">Bloquear</button>')+'</div>'+
+   '<h3 style="margin-top:10px">'+nrep(p)+'</h3>'+(p.rp.length?p.rp.map(function(r,i){return'<div class="reply"><div class="row">'+avt(r.by)+'<span>'+who(r.by,r.m)+'</span></div>'+(r.best?'<span class="ok" style="align-self:flex-start">✓ Mejor respuesta</span>':'')+(r.voice?vnHTML(r,i):'<p style="line-height:1.5">'+esc(r.bo)+'</p>')+(p.mine&&!p.solved&&!r.mine?'<div class="acts"><button data-act="best" data-i="'+i+'">Marcar como mejor respuesta</button></div>':'')+'</div>'}).join(''):'<p class="mut">Aún no hay respuestas. Sé la primera persona en responder.</p>');
+  $('#cthread').innerHTML=h};
+$('#cthread').onclick=function(e){var b=e.target.closest('[data-act]');if(!b)return;var p=curPost(),a=b.dataset.act;
+  if(a==='like'){p.liked=!p.liked;R.cpost()}
+  else if(a==='rep')toast('Gracias. El equipo revisará esta publicación.');
+  else if(a==='blk'){blocked[p.by]=1;toast('Listo. Ya no verás publicaciones de esta persona.');go('community')}
+  else if(a==='del'){PS=PS.filter(function(x){return x!==p});toast('Publicación eliminada');go('community')}
+  else if(a==='best'){p.rp[+b.dataset.i].best=1;p.solved=1;R.cpost()}};
+$('#rsend').onclick=function(){if(needAcc())return;var v=$('#rtext').value.trim();if(!v){toast('Escribe tu respuesta.');return}var p=curPost();p.rp.push({by:'Tú',mine:1,bo:v});$('#rtext').value='';R.cpost();toast('Respuesta publicada')};
+$('#cnewbtn').onclick=function(){if(needAcc(function(){go('community');go('cnew')}))return;go('cnew')};
+R.cnew=function(){$('#ntitle').value='';$('#nbody').value='';$('#nerr').textContent='';CF.ncat='q';CF.ngen='';document.querySelectorAll('#ncat button').forEach(function(x){x.setAttribute('aria-pressed',x.dataset.c==='q')});rgen()};
+function rgen(){$('#ngen').innerHTML=[['','Ninguno']].concat(Object.keys(GEN).map(function(g){return[g,GEN[g].name]})).map(function(o){return'<button data-g="'+o[0]+'" aria-pressed="'+(o[0]===CF.ngen)+'">'+o[1]+'</button>'}).join('')}
+$('#ngen').onclick=function(e){var b=e.target.closest('[data-g]');if(b){CF.ngen=b.dataset.g;rgen()}};
+$('#ncat').onclick=function(e){var b=e.target.closest('[data-c]');if(!b)return;CF.ncat=b.dataset.c;document.querySelectorAll('#ncat button').forEach(function(x){x.setAttribute('aria-pressed',x===b)})};
+$('#npub').onclick=function(){var ti=$('#ntitle').value.trim(),bo=$('#nbody').value.trim();if(!ti||!bo){$('#nerr').textContent='Escribe un título y un mensaje.';return}
+  PS.unshift({id:nid++,cat:CF.ncat,g:CF.ngen||null,by:'Tú',mine:1,ti:ti,bo:bo,w:'Ahora',lk:0,rp:[]});CF.filt='all';toast('Publicación creada');go('community')};
+
+/* ---------------- cuenta ---------------- */
+var USER=null,PENDING=null;
+var DEMO=true;
+function needAcc(fn){if(USER||DEMO)return false;PENDING=fn||null;toast('Crea una cuenta para participar. Es gratis.');go('register');return true}
+function signedIn(name,email,msg){USER={name:name,email:email};toast(msg);var fn=PENDING;PENDING=null;hist=[];if(fn){go('home',true);fn()}else go('home',true)}
+document.addEventListener('click',function(e){var b=e.target.closest('[data-pw]');if(!b)return;var i=document.getElementById(b.dataset.pw);var sh=i.type==='password';i.type=sh?'text':'password';b.textContent=sh?'Ocultar':'Mostrar'});
+document.addEventListener('click',function(e){var b=e.target.closest('[data-sso]');if(b)toast('Prototipo: aquí se abriría el inicio de sesión de '+b.dataset.sso+'.')});
+$('#regform').addEventListener('submit',function(e){e.preventDefault();var n=$('#rname').value.trim(),m=$('#rmail').value.trim(),pw=$('#rpass').value,er='';
+  if(!n)er='Escribe tu nombre.';else if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(m))er='Escribe un correo válido, por ejemplo nombre@correo.com.';else if(pw.length<8)er='La contraseña debe tener al menos 8 caracteres.';else if(!$('#rterms').checked)er='Acepta los términos para continuar.';
+  $('#rerr').textContent=er;if(!er)signedIn(n,m,'Cuenta creada. ¡A montarse!')});
+$('#logform').addEventListener('submit',function(e){e.preventDefault();var m=$('#lmail').value.trim(),pw=$('#lpass').value,er='';
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(m))er='Escribe un correo válido.';else if(!pw)er='Escribe tu contraseña.';
+  $('#lerr').textContent=er;if(!er)signedIn(m.split('@')[0],m,'Sesión iniciada')});
+$('#forgot').onclick=function(){toast('Prototipo: aquí te llegaría un enlace para cambiar la contraseña.')};
+$('#regback').onclick=$('#logback').onclick=function(){PENDING=null;go(hist.length?hist.pop():'welcome',true)};
+R.register=function(){$('#rerr').textContent=''};R.login=function(){$('#lerr').textContent=''};
+
+/* ---------------- notas de voz en la comunidad ---------------- */
+var VN={rec:false,t0:0,tm:null,draft:null,play:null};
+function vnBars(seed,n){var r=rng(seed*131+7),h='';for(var i=0;i<n;i++){var v=.25+.75*Math.abs(Math.sin(i*.45+seed))*(.45+r()*.55);h+='<i style="height:'+Math.round(v*24+3)+'px"></i>'}return h}
+function vnHTML(r,i){return'<div class="vnote"><button class="vplay" data-vn="'+i+'" aria-label="Escuchar nota de voz">'+ICON.play+'</button><div class="wv" data-vw="'+i+'">'+vnBars(r.voice.seed||i+1,30)+'</div><span class="mono" style="color:var(--mut)" data-vd="'+i+'">'+fmt(r.voice.dur)+'</span></div>'}
+function vnStop(){var P_=VN.play;if(!P_)return;VN.play=null;try{P_.el&&P_.el.pause();P_.src&&P_.src.stop()}catch(e){}clearInterval(P_.tm);if(P_.btn)P_.btn.innerHTML=ICON.play;if(P_.bars)[].forEach.call(P_.bars.children,function(b){b.classList.remove('f')})}
+function vnPlay(v,btn,bars,dlab){var was=VN.play&&VN.play.btn===btn;vnStop();if(was)return;var st={btn:btn,bars:bars};VN.play=st;btn.innerHTML=ICON.pause;var t0=Date.now();
+  function tick(pos,dur){var k=Math.round(pos/dur*bars.children.length);[].forEach.call(bars.children,function(b,j){b.classList.toggle('f',j<k)});if(dlab)dlab.textContent=fmt(pos)+' / '+fmt(dur);if(pos>=dur)vnStop()}
+  if(v.url){var el=new Audio(v.url);st.el=el;el.play().catch(function(){vnStop();toast('No pude reproducir la nota de voz.')});st.tm=setInterval(function(){tick(el.currentTime,v.dur||el.duration);if(el.ended)vnStop()},120)}
+  else if(v.buf){ac();var src=AC.createBufferSource();src.buffer=v.buf;src.connect(MASTER);src.start();st.src=src;st.tm=setInterval(function(){tick((Date.now()-t0)/1000,v.dur)},120)}
+  else{st.tm=setInterval(function(){tick((Date.now()-t0)/1000,v.dur)},120)}}
+function vnReset(){VN.draft=null;$('#vnidle').hidden=false;$('#vnprev').hidden=true;$('#vnacts').hidden=true;$('#vnrec').classList.remove('on');$('#vnlab').textContent='O responde con una nota de voz';$('#vnsub').textContent='Toca el micrófono para grabar. Tócalo otra vez para terminar.'}
+function vnShow(v){VN.draft=v;$('#vnidle').hidden=true;$('#vnprev').hidden=false;$('#vnacts').hidden=false;$('#vnplay').innerHTML=ICON.play;$('#vnwave').innerHTML=vnBars(v.seed,30);$('#vndur').textContent=fmt(v.dur)}
+$('#vnrec').onclick=function(){if(!VN.rec){vnStop();VN.rec=true;VN.t0=Date.now();this.classList.add('on');$('#vnlab').textContent='● Grabando';VN.tm=setInterval(function(){$('#vnsub').textContent=fmt((Date.now()-VN.t0)/1000)+' · toca para terminar'},250)}
+  else{VN.rec=false;clearInterval(VN.tm);var d=Math.max(1,(Date.now()-VN.t0)/1000);vnShow({dur:d,seed:Math.floor(Math.random()*999)+1,sim:true})}};
+$('#vnplay').onclick=function(){if(VN.draft)vnPlay(VN.draft,this,$('#vnwave'),$('#vndur'))};
+$('#vndel').onclick=function(){vnStop();vnReset()};
+$('#vnsend').onclick=function(){if(needAcc())return;vnStop();var p=curPost();p.rp.push({by:'Tú',mine:1,bo:'Nota de voz',voice:VN.draft});vnReset();R.cpost();toast('Nota de voz enviada');var c=$('#cpost');c.scrollTop=c.scrollHeight};
+$('#vnfile').onchange=function(){var f=this.files[0];this.value='';if(!f)return;ac();var rd=new FileReader();rd.onload=function(){AC.decodeAudioData(rd.result,function(b){vnShow({buf:b,dur:b.duration,seed:Math.floor(Math.random()*999)+1})},function(){toast('No pude leer ese audio. Prueba con otro formato.')})};rd.readAsArrayBuffer(f)};
+$('#cthread').addEventListener('click',function(e){var b=e.target.closest('[data-vn]');if(!b)return;var i=+b.dataset.vn,r=curPost().rp[i];vnPlay(r.voice,b,document.querySelector('[data-vw="'+i+'"]'),document.querySelector('[data-vd="'+i+'"]'))});
+
+/* ---------------- perfil y planes ---------------- */
+R.profile=function(){$('#pname').textContent=USER?USER.name:'Invitado';$('#pmail').textContent=USER?USER.email:'Modo demo: todo está abierto sin cuenta';$('#pav').textContent=USER?ini(USER.name):'TÚ';$('#logout').textContent=USER?'Cerrar sesión':'Crear cuenta o iniciar sesión';var mine=LL.filter(function(l){return l.items.some(function(i){return i.by==='Tú'})});$('#mycount').textContent=mine.length;
+  $('#mylls').innerHTML=mine.length?mine.map(function(l){var tr=TR(l.track);return'<button class="trow" data-open2="'+l.id+'">'+sq(tr)+'<div><b>'+esc(l.title)+'</b><div class="mut" style="font-size:13px">'+takes(l).length+' tomas</div></div></button>'}).join(''):'<p class="mut">Cuando te montes en un llameo, aparece aquí.</p>'};
+$('#mylls').onclick=function(e){var b=e.target.closest('[data-open2]');if(b)openLL(b.dataset.open2)};
+$('#logout').onclick=function(){if(!USER){go('register');return}USER=null;toast('Sesión cerrada');hist=[];go('welcome',true)};
+document.querySelectorAll('[data-plan]').forEach(function(b){b.onclick=function(){document.querySelectorAll('[data-plan]').forEach(function(x){x.setAttribute('aria-pressed',x===b)})}});
+$('#subbtn').onclick=function(){toast('Prototipo: aquí se abriría el pago de Apple o Google')};
+$('#plback').onclick=function(){go(hist.length?hist[hist.length-1]:'profile')};
+
+[$('#tplay'),$('#pdplay'),$('#vplay'),$('#lplay')].forEach(function(b){setPlay(b,false)});
+})();
+</script>
+
+<style>
+/* idioma */
+.lang{display:inline-flex;border:1px solid var(--bd);border-radius:20px;background:rgba(17,21,27,.82);padding:3px;gap:2px;flex:none}
+.lang button{padding:6px 10px;border-radius:16px;font-weight:800;font-size:12px;letter-spacing:.05em;color:var(--mut)}
+.lang button[aria-pressed="true"]{background:var(--tx);color:var(--ink)}
+#welcome .langw{position:absolute;top:22px;right:22px;z-index:2}
+@media (min-width:900px){#welcome .langw{top:38px;right:72px}}
+</style>
+<script>
+/* ---------------- idioma: español (principal), inglés y portugués de Brasil ----------------
+   Capa de traducción sobre la interfaz. El contenido que escribe la gente
+   (títulos de llameos, mensajes, publicaciones) se queda en su idioma. */
+(function(){
+/* [español, inglés, portugués] */
+var T=[
+/* marca y bienvenida */
+['por Taller Toca Plena','by Taller Toca Plena','por Taller Toca Plena'],['Prototipo','Prototype','Protótipo'],['Versión web','Web version','Versão web'],
+['Móntate en','Jump on','Entra no'],['el ritmo','the rhythm','ritmo'],
+['Canta, toca o hazle coro a un ritmo, y otra gente se monta encima de lo tuyo. Así se arma el llameo.','Sing, play or add a chorus to a rhythm, and other people layer on top of yours. That’s how a llameo comes together.','Cante, toque ou faça coro num ritmo, e outras pessoas gravam por cima do que é seu. É assim que se forma o llameo.'],
+['Crear cuenta','Create account','Criar conta'],['Ya tengo cuenta','I already have an account','Já tenho conta'],['Entrar como invitado','Continue as guest','Entrar como visitante'],
+/* inicio */
+['Perfil','Profile','Perfil'],['Ritmos para montarte','Rhythms to jump on','Ritmos para você entrar'],['Escúchalo, abre un llameo y graba la primera toma.','Give it a listen, open a llameo and record the first take.','Escute, abra um llameo e grave o primeiro take.'],
+['Llameos abiertos','Open llameos','Llameos abertos'],['Los llameos y nombres son ejemplos del prototipo','Llameos and names are prototype examples','Os llameos e nomes são exemplos do protótipo'],
+['Todos los géneros','All genres','Todos os gêneros'],['Género','Genre','Gênero'],['Abrir un llameo','Open a llameo','Abrir um llameo'],['Falta','Needs','Falta'],
+['Todavía no hay llameos de este género. Abre el primero desde un ritmo.','No llameos in this genre yet. Open the first one from a rhythm.','Ainda não há llameos deste gênero. Abra o primeiro a partir de um ritmo.'],
+['No pude cargar el audio del ritmo.','Couldn’t load the rhythm audio.','Não consegui carregar o áudio do ritmo.'],
+/* hilo */
+['Llamar gente','Invite people','Chamar gente'],['Todo','All','Tudo'],['Tomas','Takes','Takes'],
+['Escuchar el llameo completo','Play the full llameo','Ouvir o llameo completo'],['Con las tomas','With the takes','Com os takes'],['Solo el ritmo, sin voces','Just the rhythm, no vocals','Só o ritmo, sem vozes'],
+['Escríbele al grupo…','Message the group…','Escreva para o grupo…'],['Mensaje del chat','Chat message','Mensagem do chat'],['Enviar mensaje','Send message','Enviar mensagem'],['Móntate','Jump in','Entra junto'],
+['Ritmo base','Base rhythm','Ritmo base'],['En la mezcla','In the mix','Na mixagem'],['Silenciada','Muted','Silenciado'],['sobre el ritmo','over the rhythm','sobre o ritmo'],
+['Todavía no hay mensajes. Saluda al grupo o pregunta quién se monta.','No messages yet. Say hi to the group or ask who wants to jump in.','Ainda não há mensagens. Cumprimente o grupo ou pergunte quem vai entrar.'],
+['Llama gente a este llameo','Invite people to this llameo','Chame gente para este llameo'],
+['Comparte el enlace. Quien lo abra puede escuchar, montarse con su parte y escribir en el chat del llameo.','Share the link. Anyone who opens it can listen, add their part and write in the llameo chat.','Compartilhe o link. Quem abrir pode ouvir, entrar com a sua parte e escrever no chat do llameo.'],
+['Compartir por WhatsApp','Share on WhatsApp','Compartilhar no WhatsApp'],['Copiar','Copy','Copiar'],['Copiado','Copied','Copiado'],['Cerrar','Close','Fechar'],
+['En la app también sale el menú de compartir del teléfono: Instagram, mensajes y más.','In the app, the phone’s share menu shows up too: Instagram, messages and more.','No app também aparece o menu de compartilhar do celular: Instagram, mensagens e mais.'],
+/* grabar */
+['‹ Cancelar','‹ Cancel','‹ Cancelar'],['¿Qué vas a hacer?','What’s your part?','O que você vai fazer?'],['¿Qué instrumento vas a tocar?','Which instrument will you play?','Qual instrumento você vai tocar?'],
+['Cuatro, maracas, trompeta…','Cuatro, maracas, trumpet…','Cuatro, maracas, trompete…'],['Lo que vas a oír mientras grabas','What you’ll hear while recording','O que você vai ouvir enquanto grava'],
+['Ponte audífonos. Así el micrófono solo graba lo tuyo y tu toma cuadra con las demás.','Put on headphones. That way the mic only records you and your take lines up with the others.','Use fones de ouvido. Assim o microfone só grava você e o seu take encaixa com os outros.'],
+['Grabar','Record','Gravar'],['Detener','Stop','Parar'],['Usar un audio grabado en mi teléfono','Use audio recorded on my phone','Usar um áudio gravado no meu celular'],
+['Prototipo: aquí la toma se simula con un sonido de ejemplo. En la app se graba con el micrófono.','Prototype: the take is simulated with a sample sound here. In the app it records with the microphone.','Protótipo: aqui o take é simulado com um som de exemplo. No app, grava com o microfone.'],
+['Graba en privado','Record privately','Grave em privado'],['No pude leer ese audio. Prueba con otro formato.','Couldn’t read that audio. Try another format.','Não consegui ler esse áudio. Tente outro formato.'],
+/* revisar */
+['‹ Grabar de nuevo','‹ Record again','‹ Gravar de novo'],['¿Cómo quedó?','How did it turn out?','Como ficou?'],['Escuchar','Play','Ouvir'],['Volumen de tu toma','Your take’s volume','Volume do seu take'],
+['Nombre del llameo','Llameo name','Nome do llameo'],['Dile algo al llameo (opcional)','Say something to the llameo (optional)','Diga algo ao llameo (opcional)'],['Le metí el coro, ¿quién pregona?','I added the chorus. Who’s taking the lead?','Coloquei o coro. Quem puxa o canto?'],
+['Acepto compartir mi toma en este llameo. Otras personas podrán escucharla y grabar encima.','I agree to share my take in this llameo. Other people will be able to hear it and record on top.','Aceito compartilhar meu take neste llameo. Outras pessoas vão poder ouvir e gravar por cima.'],
+['Compartir en el llameo','Share in the llameo','Compartilhar no llameo'],['Grabar de nuevo','Record again','Gravar de novo'],['Guardar en privado (solo tú la oyes)','Save privately (only you can hear it)','Salvar em privado (só você ouve)'],
+['Tu audio con el llameo','Your audio with the llameo','Seu áudio com o llameo'],['Tu toma con todo lo demás','Your take with everything else','Seu take com todo o resto'],
+['Guardar en mis tomas','Save to my takes','Salvar nos meus takes'],['Abrir el llameo y compartir','Open the llameo and share','Abrir o llameo e compartilhar'],['Abrir un llameo con esta toma','Open a llameo with this take','Abrir um llameo com este take'],
+['Guardada en tus tomas privadas','Saved to your private takes','Salvo nos seus takes privados'],['Tu toma está en el llameo. Ya otros pueden montarse encima.','Your take is in the llameo. Others can now layer on top.','Seu take está no llameo. Agora outras pessoas podem gravar por cima.'],
+['Guardada en privado. Está en Práctica.','Saved privately. It’s in Practice.','Salvo em privado. Está em Prática.'],
+/* práctica */
+['Práctica','Practice','Prática'],['‹ Práctica','‹ Practice','‹ Prática'],
+['Ensaya solo o sola con los ritmos. Lo que grabes aquí es privado hasta que decidas compartirlo.','Rehearse on your own with the rhythms. Anything you record here stays private until you choose to share it.','Ensaie sozinho ou sozinha com os ritmos. O que você gravar aqui fica privado até você decidir compartilhar.'],
+['Mis tomas privadas','My private takes','Meus takes privados'],['Escuchar el ritmo','Play the rhythm','Ouvir o ritmo'],['Instrumentos del ritmo','The rhythm’s instruments','Instrumentos do ritmo'],
+['Apaga el que vas a tocar tú.','Mute the one you’re going to play.','Desligue o que você vai tocar.'],['Grabar en privado','Record privately','Gravar em privado'],
+['Apaga el que vas a tocar tú. Prende la voz guía para aprenderte la letra.','Mute the one you’re going to play. Turn on the guide vocal to learn the lyrics.','Desligue o que você vai tocar. Ligue a voz guia para aprender a letra.'],
+['Este ritmo viene completo, con todos los instrumentos juntos. Cuando tengas los canales separados, aquí podrás apagar el que vas a tocar.','This rhythm comes as one full mix with every instrument together. Once the channels are separated, you’ll be able to mute the one you’re going to play here.','Este ritmo vem completo, com todos os instrumentos juntos. Quando os canais estiverem separados, aqui você vai poder desligar o que vai tocar.'],
+['Aún no tienes tomas privadas. Abre un ritmo y graba en privado.','You don’t have any private takes yet. Open a rhythm and record privately.','Você ainda não tem takes privados. Abra um ritmo e grave em privado.'],
+['Sonando tu toma con el ritmo','Playing your take with the rhythm','Tocando seu take com o ritmo'],
+/* clases */
+['Clases','Classes','Aulas'],['‹ Clases','‹ Classes','‹ Aulas'],['Aprende cada género con quien lo enseña.','Learn each genre from the people who teach it.','Aprenda cada gênero com quem o ensina.'],
+['Gratis','Free','Grátis'],['Módulo 1','Module 1','Módulo 1'],['Módulo 2','Module 2','Módulo 2'],['‹ Módulo 1','‹ Module 1','‹ Módulo 1'],['Panderos y güiro','Panderos & güiro','Panderos e güiro'],
+['14 clases en audio','14 audio lessons (in Spanish)','14 aulas em áudio (em espanhol)'],['14 clases','14 lessons','14 aulas'],['Suscripción','Subscription','Assinatura'],['Próximamente','Coming soon','Em breve'],
+['Maestro o maestra por anunciar','Teacher to be announced','Professor ou professora a anunciar'],
+['Clases de bomba en camino. Mientras tanto, practica con el ritmo de bomba y móntate en los llameos.','Bomba classes are on the way. Meanwhile, practice with the bomba rhythm and jump into llameos.','Aulas de bomba a caminho. Enquanto isso, pratique com o ritmo de bomba e entre nos llameos.'],
+['Clases de bullerengue en producción. Mientras tanto, practica con el ritmo de bullerengue y móntate en los llameos.','Bullerengue classes are in production. Meanwhile, practice with the bullerengue rhythm and jump into llameos.','Aulas de bullerengue em produção. Enquanto isso, pratique com o ritmo de bullerengue e entre nos llameos.'],
+['Clases de bossa nova en camino. Mientras tanto, practica con el ritmo de bossa nova y móntate en los llameos.','Bossa nova classes are on the way. Meanwhile, practice with the bossa nova rhythm and jump into llameos.','Aulas de bossa nova a caminho. Enquanto isso, pratique com o ritmo de bossa nova e entre nos llameos.'],
+['Clase anterior','Previous lesson','Aula anterior'],['Reproducir','Play','Reproduzir'],['Clase siguiente','Next lesson','Próxima aula'],['Practícalo sobre un ritmo','Practice it over a rhythm','Pratique sobre um ritmo'],
+['Introducción del Taller','Introduction to the Taller','Introdução ao Taller'],['Historia de la plena','History of plena','História da plena'],['Afinación','Tuning','Afinação'],['Postura','Posture','Postura'],['Golpes','Strokes','Batidas'],
+/* perfil y planes */
+['Sin cuenta','No account','Sem conta'],['Explorando como invitado','Exploring as a guest','Explorando como visitante'],['Plan gratis','Free plan','Plano grátis'],['Módulo 1 de plena incluido','Plena Module 1 included','Módulo 1 de plena incluído'],
+['Ver planes','See plans','Ver planos'],['Tus llameos','Your llameos','Seus llameos'],['Cerrar sesión','Log out','Sair'],['Invitado','Guest','Visitante'],
+['Modo demo: todo está abierto sin cuenta','Demo mode: everything is open without an account','Modo demo: tudo está aberto sem conta'],['Crear cuenta o iniciar sesión','Create account or log in','Criar conta ou entrar'],
+['Cuando te montes en un llameo, aparece aquí.','Once you jump into a llameo, it shows up here.','Quando você entrar num llameo, ele aparece aqui.'],['Sesión cerrada','Logged out','Você saiu'],
+['‹ Atrás','‹ Back','‹ Voltar'],['Sigue aprendiendo','Keep learning','Continue aprendendo'],['El Módulo 1 de plena es gratis. Suscríbete para desbloquear los demás.','Plena Module 1 is free. Subscribe to unlock the rest.','O Módulo 1 de plena é grátis. Assine para desbloquear os outros.'],
+['Mensual','Monthly','Mensal'],['$9.99 al mes','$9.99 a month','US$ 9,99 por mês'],['Anual','Yearly','Anual'],['Precio por definir','Price TBD','Preço a definir'],['Suscribirme','Subscribe','Assinar'],
+['Prototipo: aquí se abriría el pago de Apple o Google','Prototype: Apple or Google payment would open here','Protótipo: aqui abriria o pagamento da Apple ou do Google'],
+/* comunidad */
+['Comunidad','Community','Comunidade'],['‹ Comunidad','‹ Community','‹ Comunidade'],['Pregunta, comparte y aprende con gente que toca y canta como tú.','Ask, share and learn with people who play and sing like you.','Pergunte, compartilhe e aprenda com gente que toca e canta como você.'],
+['Buscar en la comunidad','Search the community','Buscar na comunidade'],['Tipo de publicación','Post type','Tipo de publicação'],['Publicaciones de ejemplo del prototipo','Prototype sample posts','Publicações de exemplo do protótipo'],['Nueva publicación','New post','Nova publicação'],
+['Pregunta','Question','Pergunta'],['Compartir','Share','Compartilhar'],['Aviso','Notice','Aviso'],['Preguntas','Questions','Perguntas'],['Avisos','Notices','Avisos'],['Fijado','Pinned','Fixado'],['Equipo','Team','Equipe'],['Maestro','Teacher','Professor'],
+['✓ Resuelta','✓ Solved','✓ Resolvida'],['✓ Mejor respuesta','✓ Best answer','✓ Melhor resposta'],['Marcar como mejor respuesta','Mark as best answer','Marcar como melhor resposta'],['Eliminar','Delete','Excluir'],['Reportar','Report','Denunciar'],['Bloquear','Block','Bloquear'],
+['No hay publicaciones con ese filtro.','No posts match that filter.','Não há publicações com esse filtro.'],['Aún no hay respuestas. Sé la primera persona en responder.','No replies yet. Be the first to reply.','Ainda não há respostas. Seja a primeira pessoa a responder.'],
+['Gracias. El equipo revisará esta publicación.','Thanks. The team will review this post.','Obrigado. A equipe vai revisar esta publicação.'],['Listo. Ya no verás publicaciones de esta persona.','Done. You won’t see posts from this person anymore.','Pronto. Você não vai mais ver publicações desta pessoa.'],
+['Publicación eliminada','Post deleted','Publicação excluída'],['Escribe tu respuesta.','Write your reply.','Escreva sua resposta.'],['Respuesta publicada','Reply posted','Resposta publicada'],['Ninguno','None','Nenhum'],
+['Escribe un título y un mensaje.','Write a title and a message.','Escreva um título e uma mensagem.'],['Publicación creada','Post created','Publicação criada'],
+['Tu respuesta','Your reply','Sua resposta'],['Escribe tu respuesta…','Write your reply…','Escreva sua resposta…'],['Responder','Reply','Responder'],['Grabar nota de voz','Record a voice note','Gravar mensagem de voz'],
+['O responde con una nota de voz','Or reply with a voice note','Ou responda com uma mensagem de voz'],['Toca el micrófono para grabar. Tócalo otra vez para terminar.','Tap the mic to record. Tap it again to finish.','Toque no microfone para gravar. Toque de novo para terminar.'],
+['Escuchar tu nota de voz','Play your voice note','Ouvir sua mensagem de voz'],['Escuchar nota de voz','Play voice note','Ouvir mensagem de voz'],['Borrar','Delete','Apagar'],['Enviar nota de voz','Send voice note','Enviar mensagem de voz'],['Subir un audio del teléfono','Upload audio from your phone','Enviar um áudio do celular'],
+['Prototipo: la grabación se simula. En la app se graba con el micrófono del teléfono.','Prototype: recording is simulated. In the app it uses the phone’s microphone.','Protótipo: a gravação é simulada. No app, grava com o microfone do celular.'],
+['● Grabando','● Recording','● Gravando'],['toca para terminar','tap to finish','toque para terminar'],['Nota de voz','Voice note','Mensagem de voz'],['Nota de voz enviada','Voice note sent','Mensagem de voz enviada'],['No pude reproducir la nota de voz.','Couldn’t play the voice note.','Não consegui reproduzir a mensagem de voz.'],
+['Género (opcional)','Genre (optional)','Gênero (opcional)'],['Título','Title','Título'],['Mensaje','Message','Mensagem'],['Escribe tu pregunta o lo que quieres compartir','Write your question or what you’d like to share','Escreva sua pergunta ou o que quer compartilhar'],
+['Escribe con respeto. Cualquier persona puede reportar una publicación y el equipo la revisa.','Be respectful. Anyone can report a post and the team reviews it.','Escreva com respeito. Qualquer pessoa pode denunciar uma publicação e a equipe revisa.'],['Publicar','Post','Publicar'],
+/* cuenta */
+['Crea tu cuenta','Create your account','Crie sua conta'],['Con tu cuenta te montas en llameos, guardas tus tomas y participas en la comunidad.','With an account you can jump into llameos, save your takes and join the community.','Com sua conta você entra nos llameos, salva seus takes e participa da comunidade.'],
+['Nombre','Name','Nome'],['Correo electrónico','Email','E-mail'],['Contraseña','Password','Senha'],['Mostrar','Show','Mostrar'],['Ocultar','Hide','Ocultar'],['Al menos 8 caracteres','At least 8 characters','Pelo menos 8 caracteres'],
+['Acepto los términos de uso y la política de privacidad','I accept the terms of use and the privacy policy','Aceito os termos de uso e a política de privacidade'],['o','or','ou'],
+['Continuar con Apple','Continue with Apple','Continuar com a Apple'],['Continuar con Google','Continue with Google','Continuar com o Google'],['¿Ya tienes cuenta?','Already have an account?','Já tem conta?'],['Inicia sesión','Log in','Entre'],
+['Bienvenido de nuevo','Welcome back','Que bom te ver de novo'],['Entra para seguir montándote.','Log in to keep jumping in.','Entre para continuar gravando.'],['¿Olvidaste tu contraseña?','Forgot your password?','Esqueceu sua senha?'],
+['Iniciar sesión','Log in','Entrar'],['¿No tienes cuenta?','Don’t have an account?','Não tem conta?'],['Regístrate','Sign up','Cadastre-se'],
+['Crea una cuenta para participar. Es gratis.','Create an account to take part. It’s free.','Crie uma conta para participar. É grátis.'],
+['Escribe tu nombre.','Enter your name.','Escreva seu nome.'],['Escribe un correo válido, por ejemplo nombre@correo.com.','Enter a valid email, for example name@email.com.','Escreva um e-mail válido, por exemplo nome@email.com.'],
+['La contraseña debe tener al menos 8 caracteres.','Your password must be at least 8 characters.','A senha precisa ter pelo menos 8 caracteres.'],['Acepta los términos para continuar.','Accept the terms to continue.','Aceite os termos para continuar.'],
+['Cuenta creada. ¡A montarse!','Account created. Let’s jump in!','Conta criada. Bora gravar!'],['Escribe un correo válido.','Enter a valid email.','Escreva um e-mail válido.'],['Escribe tu contraseña.','Enter your password.','Escreva sua senha.'],
+['Sesión iniciada','Logged in','Você entrou'],['Prototipo: aquí te llegaría un enlace para cambiar la contraseña.','Prototype: you’d get a password reset link here.','Protótipo: aqui você receberia um link para trocar a senha.'],
+['Principal','Main','Principal'],
+/* personas y tiempo */
+['Tú','You','Você'],['TÚ','YOU','EU'],['Ahora','Now','Agora'],['Ayer','Yesterday','Ontem'],
+/* partes e instrumentos (los nombres tradicionales se quedan) */
+['Pregón','Lead (pregón)','Pregón (solista)'],['Coro','Chorus','Coro'],['Voz','Vocals','Voz'],['Cantadora','Lead (cantadora)','Cantadora (solista)'],['Palmas','Hand claps','Palmas'],
+['Pandero seguidor','Seguidor pandero','Pandero seguidor'],['Pandero punteador','Punteador pandero','Pandero punteador'],['Trompeta','Trumpet','Trompete'],['Acordeón','Accordion','Acordeão'],
+['Guitarra','Guitar','Violão'],['Percusión','Percussion','Percussão'],['Otro','Other','Outro'],['Bajo','Bass','Baixo'],['Campana','Cowbell','Campana'],['Acordes','Chords','Acordes'],
+['Bongó','Bongo','Bongô'],['Gaitas y alegre','Gaitas & alegre','Gaitas e alegre'],['Voz guía','Guide vocal','Voz guia'],
+/* tonalidades */
+['Si menor','B minor','Si menor'],['Do# mayor','C# major','Dó# maior'],['Sin tono, solo percusión','No key, percussion only','Sem tom, só percussão'],['Do menor','C minor','Dó menor'],
+['Mib menor (por confirmar)','Eb minor (TBC)','Mib menor (a confirmar)'],['Fa mayor','F major','Fá maior'],['Re','D','Ré'],['Do# menor','C# minor','Dó# menor'],['La menor','A minor','Lá menor'],['Re menor','D minor','Ré menor'],['Re mayor','D major','Ré maior']
+];
+function pl(n,one,many){return n+' '+(+n===1?one:many)}
+var R={
+en:[
+ [/^(\d+) ritmos?$/i,function(m,n){return pl(n,'rhythm','rhythms')}],
+ [/^(\d+) tomas?$/i,function(m,n){return pl(n,'take','takes')}],
+ [/^(\d+) respuestas?$/i,function(m,n){return pl(n,'reply','replies')}],
+ [/^(\d+) personas? en este llameo$/i,function(m,n){return pl(n,'person','people')+' in this llameo'}],
+ [/^sobre el ritmo \+ (\d+) tomas?$/i,function(m,n){return'over the rhythm + '+pl(n,'take','takes')}],
+ [/^Hace (\d+) h$/i,function(m,n){return n+' h ago'}],
+ [/^Hace (\d+) días?$/i,function(m,n){return pl(n,'day','days')+' ago'}],
+ [/^♥ (\d+) Me gusta$/,function(m,n){return'♥ '+n+' Like'}],
+ [/^estilo (.+)$/i,function(m,s){return s+' style'}],
+ [/^disco «(.+)»$/i,function(m,s){return'album “'+s+'”'}],
+ [/^en «(.+)»$/,function(m,s){return'in “'+s+'”'}],
+ [/^sobre «(.+)»$/,function(m,s){return'over “'+s+'”'}],
+ [/^Abres un llameo nuevo con «(.+)»$/,function(m,s){return'Opening a new llameo with “'+s+'”'}],
+ [/^(.+) abrió este llameo$/,function(m,s){return tr(s)+' opened this llameo'}],
+ [/^Falta: (.+)\. Toca «Móntate» para grabar encima de todo\.$/,function(m,s){return'Still needed: '+s.split(', ').map(tr).join(', ')+'. Tap “Jump in” to record over everything.'}],
+ [/^¿Cómo quedó tu (.+)\?$/,function(m,s){return'How did your '+ci(s).toLowerCase()+' turn out?'}],
+ [/^Apagamos el (.+) para que lo toques tú$/,function(m,s){return'We muted the '+ci(s).toLowerCase()+' so you can play it'}],
+ [/^Práctica: (.+)$/,function(m,s){return'Practice: '+s}],
+ [/^Portada de (.+)$/,function(m,s){return'Cover of '+s}],
+ [/^Escuchar (.+)$/,function(m,s){return'Play '+s}],
+ [/^Oír (.+)$/,function(m,s){return'Hear '+tr(s)}],
+ [/^Prototipo: aquí se abriría el inicio de sesión de (.+)\.$/,function(m,s){return'Prototype: '+s+' sign-in would open here.'}]],
+pt:[
+ [/^(\d+) ritmos?$/i,function(m,n){return pl(n,'ritmo','ritmos')}],
+ [/^(\d+) tomas?$/i,function(m,n){return pl(n,'take','takes')}],
+ [/^(\d+) respuestas?$/i,function(m,n){return pl(n,'resposta','respostas')}],
+ [/^(\d+) personas? en este llameo$/i,function(m,n){return pl(n,'pessoa','pessoas')+' neste llameo'}],
+ [/^sobre el ritmo \+ (\d+) tomas?$/i,function(m,n){return'sobre o ritmo + '+pl(n,'take','takes')}],
+ [/^Hace (\d+) h$/i,function(m,n){return'Há '+n+' h'}],
+ [/^Hace (\d+) días?$/i,function(m,n){return'Há '+pl(n,'dia','dias')}],
+ [/^♥ (\d+) Me gusta$/,function(m,n){return'♥ '+n+' Curtir'}],
+ [/^estilo (.+)$/i,function(m,s){return'estilo '+s}],
+ [/^disco «(.+)»$/i,function(m,s){return'disco “'+s+'”'}],
+ [/^en «(.+)»$/,function(m,s){return'em “'+s+'”'}],
+ [/^sobre «(.+)»$/,function(m,s){return'sobre “'+s+'”'}],
+ [/^Abres un llameo nuevo con «(.+)»$/,function(m,s){return'Você abre um llameo novo com “'+s+'”'}],
+ [/^(.+) abrió este llameo$/,function(m,s){return tr(s)+' abriu este llameo'}],
+ [/^Falta: (.+)\. Toca «Móntate» para grabar encima de todo\.$/,function(m,s){return'Falta: '+s.split(', ').map(tr).join(', ')+'. Toque em “Entra junto” para gravar por cima de tudo.'}],
+ [/^¿Cómo quedó tu (.+)\?$/,function(m,s){return'Como ficou seu take de '+ci(s).toLowerCase()+'?'}],
+ [/^Apagamos el (.+) para que lo toques tú$/,function(m,s){return'Desligamos o '+ci(s).toLowerCase()+' para você tocar'}],
+ [/^Práctica: (.+)$/,function(m,s){return'Prática: '+s}],
+ [/^Portada de (.+)$/,function(m,s){return'Capa de '+s}],
+ [/^Escuchar (.+)$/,function(m,s){return'Ouvir '+s}],
+ [/^Oír (.+)$/,function(m,s){return'Ouvir '+tr(s)}],
+ [/^Prototipo: aquí se abriría el inicio de sesión de (.+)\.$/,function(m,s){return'Protótipo: aqui abriria o login com '+s+'.'}]]
+};
+var IDX={en:1,pt:2},D={},LO={};
+['en','pt'].forEach(function(l){var d={},lo={};T.forEach(function(r){d[r[0]]=r[IDX[l]];lo[r[0].toLowerCase()]=r[IDX[l]]});D[l]=d;LO[l]=lo});
+var WA={en:function(t,u){return'Jump on “'+t+'” with me on Llameo: '+u},pt:function(t,u){return'Grava comigo em “'+t+'” no Llameo: '+u}};
+var HINT={es:'Las clases en audio son en español',en:'Audio lessons are in Spanish',pt:'As aulas em áudio são em espanhol'};
+
+var LANG='es';
+try{var q=new URLSearchParams(location.search).get('lang');if(q in HINT)LANG=q;else{var sv=localStorage.getItem('llameo.lang');if(sv in HINT)LANG=sv}}catch(e){}
+
+function ci(s){var d=D[LANG],lo=LO[LANG];return d.hasOwnProperty(s)?d[s]:lo.hasOwnProperty(s.toLowerCase())?lo[s.toLowerCase()]:s}
+function caps(s){return /[A-ZÁÉÍÓÚÑÜ]/.test(s)&&s===s.toUpperCase()}
+function tr(s){
+  var d=D[LANG],lo=LO[LANG],rules=R[LANG];if(!d)return s;
+  if(d.hasOwnProperty(s))return d[s];
+  var C=caps(s);
+  if(C&&lo.hasOwnProperty(s.toLowerCase()))return lo[s.toLowerCase()].toUpperCase();
+  for(var i=0;i<rules.length;i++){var r=rules[i];if(r[0].test(s)){var o=s.replace(r[0],r[1]);return C?o.toUpperCase():o}}
+  if(s.indexOf(' · ')>0){var ch=false,p=s.split(' · ').map(function(x){var t=tr(x);if(t!==x)ch=true;return t});if(ch)return p.join(' · ')}
+  return s}
+
+/* cada nodo recuerda su texto original en español, así se puede cambiar entre idiomas en cualquier orden */
+var TX=new WeakMap(),AT=new WeakMap(),ATTRS=['placeholder','aria-label','alt','title'];
+function skip(el){return !el||el.closest('script,style,[data-noi18n]')}
+function skipT(el){return !el||el.closest('script,style,textarea,[data-noi18n]')}
+function doText(n){var d=n.data;if(!/\S/.test(d))return;var rec=TX.get(n),src=rec&&d===rec.out?rec.src:d;
+  var m=src.match(/^(\s*)([\s\S]*?)(\s*)$/),out=m[1]+tr(m[2])+m[3];TX.set(n,{src:src,out:out});if(out!==d)n.data=out}
+function doAttr(el,a){var v=el.getAttribute(a);if(v==null||!/\S/.test(v))return;var map=AT.get(el);if(!map){map={};AT.set(el,map)}var rec=map[a],src=rec&&v===rec.out?rec.src:v;
+  var out=tr(src.trim());map[a]={src:src,out:out};if(out!==v)el.setAttribute(a,out)}
+function doWa(el){var a=el.querySelectorAll?el.querySelectorAll('a[href*="wa.me/?text="]'):[];[].forEach.call(a,function(x){var h=x.getAttribute('href'),i=h.indexOf('text=');if(i<0||!WA[LANG])return;var t=decodeURIComponent(h.slice(i+5)),m=t.match(/^Móntate conmigo en «(.+)» en Llameo: (.+)$/);if(m)x.setAttribute('href',h.slice(0,i+5)+encodeURIComponent(WA[LANG](m[1],m[2])))})}
+function walk(root,fn){
+  if(root.nodeType===3){if(!skipT(root.parentElement))fn.text(root);return}
+  if(root.nodeType!==1||skip(root))return;
+  var tw=document.createTreeWalker(root,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_TEXT,{acceptNode:function(n){if(n.nodeType===1&&n.matches('script,style,[data-noi18n]'))return NodeFilter.FILTER_REJECT;if(n.nodeType===3&&n.parentElement.closest('textarea'))return NodeFilter.FILTER_SKIP;return NodeFilter.FILTER_ACCEPT}});
+  var n=root;do{if(n.nodeType===3)fn.text(n);else fn.el(n)}while((n=tw.nextNode()))}
+var TO_X={text:doText,el:function(el){ATTRS.forEach(function(a){if(el.hasAttribute(a))doAttr(el,a)})}};
+var TO_ES={text:function(n){var r=TX.get(n);if(r&&n.data===r.out)n.data=r.src},el:function(el){var map=AT.get(el);if(!map)return;Object.keys(map).forEach(function(a){if(el.getAttribute(a)===map[a].out)el.setAttribute(a,map[a].src)})}};
+
+/* nombre sugerido para un llameo nuevo (está en un campo, no en el texto) */
+function fixName(){var v=document.getElementById('vname');if(!v||!v.value)return;
+  if(LANG==='en'){var m=v.value.match(/^Llameo de (.+)$/);if(m)v.value=m[1]+' llameo'}
+  else{var k=v.value.match(/^(.+) llameo$/);if(k)v.value='Llameo de '+k[1]}}
+
+var mo=new MutationObserver(function(list){if(LANG==='es')return;
+  list.forEach(function(m){
+    if(m.type==='characterData'){if(!skipT(m.target.parentElement))doText(m.target)}
+    else if(m.type==='attributes'){if(m.attributeName==='class'){if(m.target.id==='review')fixName()}else if(!skip(m.target))doAttr(m.target,m.attributeName)}
+    else m.addedNodes.forEach(function(n){walk(n,TO_X);if(n.nodeType===1)doWa(n)})})});
+mo.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:ATTRS.concat(['class'])});
+
+var TITLE=document.title;
+function hint(){var h=document.querySelector('#profile [data-hint]');if(h)h.textContent=HINT[LANG]}
+function setLang(l){LANG=l;try{localStorage.setItem('llameo.lang',l)}catch(e){}
+  document.documentElement.lang=l==='pt'?'pt-BR':l;document.title=l==='es'?TITLE:tr(TITLE);
+  walk(document.body,l==='es'?TO_ES:TO_X);fixName();hint();
+  document.querySelectorAll('[data-lang]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.lang===l)})}
+
+/* selectores: bienvenida y perfil */
+function sw(short){var L=[['es','ES','Español'],['en','EN','English'],['pt','PT','Português']];
+  return'<div class="lang" role="group" aria-label="Idioma / Language" data-noi18n>'+L.map(function(x){return'<button data-lang="'+x[0]+'" lang="'+(x[0]==='pt'?'pt-BR':x[0])+'" aria-pressed="false"'+(short?' aria-label="'+x[2]+'"':'')+'>'+(short?x[1]:x[2])+'</button>'}).join('')+'</div>'}
+var w=document.getElementById('welcome');if(w){var d=document.createElement('div');d.className='langw';d.setAttribute('data-noi18n','');d.innerHTML=sw(true);w.appendChild(d)}
+var lo=document.getElementById('logout');if(lo){var p=document.createElement('div');p.className='panel';p.setAttribute('data-noi18n','');p.style.cssText='gap:10px';
+  p.innerHTML='<div><b>Idioma · Language</b><div class="mut" style="font-size:13px" data-hint></div></div>'+sw(false);lo.parentNode.insertBefore(p,lo);
+  p.querySelector('.lang').style.alignSelf='flex-start'}
+document.addEventListener('click',function(e){var b=e.target.closest('[data-lang]');if(!b)return;e.preventDefault();e.stopPropagation();setLang(b.dataset.lang)},true);
+
+setLang(LANG);
+})();
+</script>
+
+
+</body></html>
