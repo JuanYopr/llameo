@@ -435,6 +435,7 @@ input[type=range]{width:100%;accent-color:var(--red)}
   <button class="back" id="regback">‹ Atrás</button>
   <h2>Crea tu cuenta</h2>
   <p class="mut" style="margin-top:-6px">Con tu cuenta te montas en llameos, guardas tus tomas y participas en la comunidad.</p>
+  <span class="ex">Demo: las cuentas todavía no se guardan. No uses una contraseña real.</span>
   <form id="regform" novalidate style="display:flex;flex-direction:column;gap:14px">
     <label class="fld">Nombre<input id="rname" type="text" autocomplete="name"></label>
     <label class="fld">Correo electrónico<input id="rmail" type="email" autocomplete="email" inputmode="email"></label>
@@ -453,6 +454,7 @@ input[type=range]{width:100%;accent-color:var(--red)}
   <button class="back" id="logback">‹ Atrás</button>
   <h2>Bienvenido de nuevo</h2>
   <p class="mut" style="margin-top:-6px">Entra para seguir montándote.</p>
+  <span class="ex">Demo: las cuentas todavía no se guardan. No uses una contraseña real.</span>
   <form id="logform" novalidate style="display:flex;flex-direction:column;gap:14px">
     <label class="fld">Correo electrónico<input id="lmail" type="email" autocomplete="email" inputmode="email"></label>
     <label class="fld">Contraseña<span class="pw"><input id="lpass" type="password" autocomplete="current-password"><button type="button" data-pw="lpass">Mostrar</button></span></label>
@@ -523,7 +525,7 @@ var V={
 };
 function rng(seed){var a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
-var C={F:{n:[57,60,65],r:41},Csm:{n:[61,64,68],r:37},Dm2:{n:[62,65,69],r:38},Db:{n:[61,65,68],r:37},Bm:{n:[59,62,66],r:47},Am:{n:[57,60,64],r:45},Dm:{n:[57,62,65],r:50},E7:{n:[56,59,62],r:40},D:{n:[57,62,66],r:50},G:{n:[55,59,62],r:43},A7:{n:[55,61,64],r:45},Cm:{n:[55,60,63],r:36},Fm:{n:[56,60,65],r:41},G7:{n:[55,59,65],r:43},F:{n:[57,60,65],r:41}};
+var C={Ebm:{n:[58,63,66],r:39},F:{n:[57,60,65],r:41},Csm:{n:[61,64,68],r:37},Dm2:{n:[62,65,69],r:38},Db:{n:[61,65,68],r:37},Bm:{n:[59,62,66],r:47},Am:{n:[57,60,64],r:45},Dm:{n:[57,62,65],r:50},E7:{n:[56,59,62],r:40},D:{n:[57,62,66],r:50},G:{n:[55,59,62],r:43},A7:{n:[55,61,64],r:45},Cm:{n:[55,60,63],r:36},Fm:{n:[56,60,65],r:41},G7:{n:[55,59,65],r:43},F:{n:[57,60,65],r:41}};
 var GUIRO=[1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1],LONGS={0:1,4:1,8:1,12:1};
 /* partes de base (stems) */
 var STEM={
@@ -711,7 +713,7 @@ $('#tfilt').onclick=function(e){var b=e.target.closest('[data-tf]');if(!b)return
 $('#composer').addEventListener('submit',function(e){e.preventDefault();if(needAcc())return;var v=$('#ctext').value.trim();if(!v)return;cur.items.push({t:'msg',by:'Tú',text:v,ago:'Ahora'});$('#ctext').value='';renderChat();var c=$('#chat');c.scrollTop=c.scrollHeight});
 $('#cmonta').onclick=function(){startRec({mode:'join',ll:cur,track:TR(cur.track)})};
 $('#tinvite').onclick=function(){var slug=cur.title.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-  var sh=document.createElement('div');sh.className='shade';var wa='https://wa.me/?text='+encodeURIComponent('Móntate conmigo en «'+cur.title+'» en Llameo: https://llameo.app/l/'+slug);sh.innerHTML='<div class="sheet" role="dialog" aria-label="Llamar gente"><h3>Llama gente a este llameo</h3><p class="mut">Comparte el enlace. Quien lo abra puede escuchar, montarse con su parte y escribir en el chat del llameo.</p><a class="btn" style="background:#25d366;color:#07090c;text-decoration:none" href="'+wa+'" target="_blank" rel="noopener">Compartir por WhatsApp</a><div class="linkbox"><span id="lk">llameo.app/l/'+slug+'</span><button id="lkc">Copiar</button></div><p class="mut" style="font-size:12px">En la app también sale el menú de compartir del teléfono: Instagram, mensajes y más.</p><button class="btn alt" id="lkx">Cerrar</button></div>';
+  var sh=document.createElement('div');sh.className='shade';var wa='https://wa.me/?text='+encodeURIComponent('Móntate conmigo en «'+cur.title+'» en Llameo: https://llameo.com/?l='+slug);sh.innerHTML='<div class="sheet" role="dialog" aria-label="Llamar gente"><h3>Llama gente a este llameo</h3><p class="mut">Comparte el enlace. Quien lo abra puede escuchar, montarse con su parte y escribir en el chat del llameo.</p><a class="btn" style="background:#25d366;color:#07090c;text-decoration:none" href="'+wa+'" target="_blank" rel="noopener">Compartir por WhatsApp</a><div class="linkbox"><span id="lk">llameo.com/?l='+slug+'</span><button id="lkc">Copiar</button></div><p class="mut" style="font-size:12px">En la app también sale el menú de compartir del teléfono: Instagram, mensajes y más.</p><button class="btn alt" id="lkx">Cerrar</button></div>';
   $('#app').appendChild(sh);sh.onclick=function(e){if(e.target===sh||e.target.id==='lkx')sh.remove()};
   $('#lkc').onclick=function(){var txt=$('#lk').textContent,b=this;function ok(){b.textContent='Copiado'}try{navigator.clipboard.writeText(txt).then(ok,function(){sel()})}catch(e){sel()}function sel(){var r=document.createRange();r.selectNodeContents($('#lk'));var s=getSelection();s.removeAllRanges();s.addRange(r)}}};
 
@@ -779,7 +781,7 @@ $('#pdrec').onclick=function(){startRec({mode:'private',track:PD.track,rate:PD.r
 
 /* ---------------- clases ---------------- */
 var LT=['Introducción del Taller','Historia de la plena','Panderos','Afinación','Postura','Golpes','Seguidor','Punteador','Requinto','Güicharo','Práctica: Seguidor','Práctica: Punteador','Práctica: Requinto','Práctica: Güicharo'];
-var LD=[39,76,91,91,91,91,74,46,61,110,79,63,54,73],seen={},li=0,au=new Audio();au.preload='none';
+var LD=[39,76,74,46,61,110,79,63,54,73,91,91,91,91],seen={},li=0,au=new Audio();au.preload='none';
 var LSTEM={6:'Seguidor',7:'Punteador',9:'Güiro',10:'Seguidor',11:'Punteador',13:'Güiro'};
 R.module=function(){$('#lessons').innerHTML=LT.map(function(t,i){return'<button class="les" data-l="'+i+'"><span class="num'+(seen[i]?' done':'')+'">'+(i+1)+'</span><span style="flex:1"><b>'+t+'</b><br><span class="mut" style="font-size:13px">'+fmt(LD[i])+'</span></span></button>'}).join('')};
 $('#lessons').onclick=function(e){var b=e.target.closest('[data-l]');if(!b)return;loadL(+b.dataset.l);go('player');lplay()};
@@ -796,7 +798,7 @@ R.player=function(){};
 var CAT={q:'Pregunta',s:'Compartir',a:'Aviso'},CF={filt:'all',q:'',open:null,ncat:'q',ngen:''},blocked={},nid=10;
 var PS=[
  {id:1,cat:'a',pin:1,by:'Llameo',m:1,ti:'Bienvenidos a la comunidad',bo:'Aquí puedes hacer preguntas, compartir lo que estás aprendiendo y ayudar a quien empieza. Para montarte en un ritmo, ve a Llameo. Escribe con respeto.',w:'Hace 3 días',lk:12,rp:[]},
- {id:2,cat:'q',g:'plena',by:'María L.',ti:'¿Cada cuánto debo afinar mi pandero?',bo:'Estoy en la clase de afinación y mi pandero se destempla rápido. ¿Cada cuánto lo revisan ustedes?',w:'Hace 2 h',lk:4,solved:1,rp:[{by:'Taller Toca Plena',m:1,best:1,bo:'Revísalo antes de cada práctica. Con el calor y la humedad el cuero cambia, así que afina poco a poco y vuelve a probar.'},{by:'Carlos R.',bo:'A mí me ayudó afinarlo siempre en el mismo lugar de la casa.'},{by:'Taller Toca Plena',m:1,bo:'Nota de voz',voice:{url:'au/04.mp3',dur:91,seed:4}}]},
+ {id:2,cat:'q',g:'plena',by:'María L.',ti:'¿Cada cuánto debo afinar mi pandero?',bo:'Estoy en la clase de afinación y mi pandero se destempla rápido. ¿Cada cuánto lo revisan ustedes?',w:'Hace 2 h',lk:4,solved:1,rp:[{by:'Taller Toca Plena',m:1,best:1,bo:'Revísalo antes de cada práctica. Con el calor y la humedad el cuero cambia, así que afina poco a poco y vuelve a probar.'},{by:'Carlos R.',bo:'A mí me ayudó afinarlo siempre en el mismo lugar de la casa.'},{by:'Taller Toca Plena',m:1,bo:'Nota de voz',voice:{url:'au/04.mp3',dur:46,seed:4}}]},
  {id:3,cat:'s',g:'plena',by:'Carlos R.',ti:'Dos semanas con el seguidor',bo:'Ya me sale el seguidor de El Pescador sin perderme. Lo que más me ayudó fue practicar con el seguidor apagado en Práctica.',w:'Ayer',lk:9,rp:[{by:'Yari M.',bo:'¡Eso! Ahora móntate en un llameo.'}]},
  {id:4,cat:'q',g:'plena',by:'Yari M.',ti:'¿Cómo evito que se me canse la muñeca con el requinto?',bo:'Después de unos minutos me duele la muñeca. ¿Es la postura?',w:'Hace 3 días',lk:2,rp:[]}];
 function who(n,m){return'<b>'+esc(n)+'</b>'+(m?'<span class="badge">'+(n==='Llameo'?'Equipo':'Maestro')+'</span>':'')}
@@ -900,7 +902,7 @@ var T=[
 ['por Taller Toca Plena','by Taller Toca Plena','por Taller Toca Plena'],['Prototipo','Prototype','Protótipo'],['Versión web','Web version','Versão web'],
 ['Móntate en','Jump on','Entra no'],['el ritmo','the rhythm','ritmo'],
 ['Canta, toca o hazle coro a un ritmo, y otra gente se monta encima de lo tuyo. Así se arma el llameo.','Sing, play or add a chorus to a rhythm, and other people layer on top of yours. That’s how a llameo comes together.','Cante, toque ou faça coro num ritmo, e outras pessoas gravam por cima do que é seu. É assim que se forma o llameo.'],
-['Crear cuenta','Create account','Criar conta'],['Ya tengo cuenta','I already have an account','Já tenho conta'],['Entrar como invitado','Continue as guest','Entrar como visitante'],
+['Crear cuenta','Create account','Criar conta'],['Demo: las cuentas todavía no se guardan. No uses una contraseña real.','Demo: accounts aren’t saved yet. Don’t use a real password.','Demo: as contas ainda não são salvas. Não use uma senha real.'],['Ya tengo cuenta','I already have an account','Já tenho conta'],['Entrar como invitado','Continue as guest','Entrar como visitante'],
 /* inicio */
 ['Perfil','Profile','Perfil'],['Ritmos para montarte','Rhythms to jump on','Ritmos para você entrar'],['Escúchalo, abre un llameo y graba la primera toma.','Give it a listen, open a llameo and record the first take.','Escute, abra um llameo e grave o primeiro take.'],
 ['Llameos abiertos','Open llameos','Llameos abertos'],['Los llameos y nombres son ejemplos del prototipo','Llameos and names are prototype examples','Os llameos e nomes são exemplos do protótipo'],
