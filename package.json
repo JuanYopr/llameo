@@ -1,12 +1,20 @@
 {
   "name": "llameo",
   "private": true,
-  "workspaces": ["apps/*", "packages/*"],
-  "engines": { "node": ">=24" },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "build": "npm run build --workspaces --if-present"
+  },
+  "devDependencies": {
+    "supabase": "^3.1.0"
   }
 }
