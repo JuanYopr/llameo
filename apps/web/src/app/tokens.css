@@ -1,0 +1,11 @@
+/* Copied from web/index.html :root. The prototype has a single dark look on purpose.
+   Font families point at next/font variables (set in layout.tsx) instead of Google Fonts names. */
+:root{
+  color-scheme:dark;
+  --out:#000;--bg:#07090c;--sf:#11151b;--sf2:#1a2029;--bd:#262e39;--tx:#f3f5f7;--mut:#8c97a6;
+  --red:#e5321f;--blue:#2ba6ec;--gold:#f0b429;--ink:#07090c;
+  --plena:#e5321f;--bullerengue:#5cc98f;--cumbia:#f0b429;--bossa:#f28b6b;--bomba:#b48cf2;
+  --f-disp:var(--font-archivo),'Arial Narrow',system-ui,sans-serif;
+  --f-body:var(--font-figtree),system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:var(--font-plex-mono),ui-monospace,Menlo,monospace;
+}

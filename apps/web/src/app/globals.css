@@ -1,0 +1,26 @@
+/* Base element styles from web/index.html. */
+*{box-sizing:border-box;margin:0}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--out);color:var(--tx);font-family:var(--f-body);display:flex;align-items:center;justify-content:center}
+.phone{width:100%;max-width:400px;height:100%;max-height:840px;background:var(--bg);position:relative;overflow:hidden;border:1px solid var(--bd);border-radius:36px}
+@media (max-width:440px){.phone{border:0;border-radius:0;max-height:none}}
+img{display:block;max-width:100%}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+button:disabled{cursor:not-allowed;opacity:.4}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.scr{position:absolute;inset:0;padding:22px 18px 96px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.scr>*{flex-shrink:0}
+h1,h2,h3{font-family:var(--f-disp);font-stretch:75%;font-weight:800;letter-spacing:-.01em;text-wrap:balance;line-height:1.02}
+h1{font-size:44px}h2{font-size:30px}h3{font-size:20px}
+p{line-height:1.5}
+.mut{color:var(--mut);font-size:14px}
+.mono{font-family:var(--f-mono);font-size:12px;letter-spacing:.02em}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px 18px;border-radius:14px;font-weight:700;font-size:16px;background:var(--tx);color:var(--ink)}
+.btn.alt{background:var(--sf);color:var(--tx);border:1px solid var(--bd)}
+.btn.red{background:var(--red);color:#fff}
+.btn:active:not(:disabled){transform:scale(.98)}
+.brand{display:flex;flex-direction:column;gap:3px}
+.byline{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);padding-left:33px;white-space:nowrap}
+.mark{font-family:var(--f-disp);font-stretch:62%;font-weight:900;font-size:30px;letter-spacing:.01em;display:flex;align-items:center;gap:8px;line-height:1}
+.mark svg{color:var(--red)}

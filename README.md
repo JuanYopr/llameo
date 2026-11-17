@@ -29,3 +29,22 @@ El código (`index.html`) todavía los menciona, así que esos dos ritmos no son
 - A las pistas se les llama **ritmos** (no "pistas").
 - Los ritmos muestran solo el **BPM**, sin tonalidad.
 - La web y el prototipo deben mantenerse con el mismo diseño.
+
+## Desarrollo (app nueva)
+
+La app nueva vive junto a los prototipos, que no se tocan hasta el lanzamiento:
+
+```
+apps/web/         App web (Next.js)
+packages/shared/  Código compartido entre web y la futura app móvil
+supabase/         Migraciones, pruebas de la base de datos y funciones
+```
+
+Requisitos: Node 24 (ver `.nvmrc`) y Docker (para Supabase local).
+
+```
+npm install
+npm test          # pruebas
+npm run typecheck
+npm run build
+```
