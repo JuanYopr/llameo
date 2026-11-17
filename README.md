@@ -22,7 +22,15 @@ prototipo/   Prototipo de la app móvil (mismo diseño, se mantienen sincronizad
 Los audios de los ritmos están en `web/au/` y `prototipo/au/`.
 
 `rueda-de-tambor.mp3` y `trombone-mambo.mp3` se dejaron fuera del repositorio a propósito.
-El código (`index.html`) todavía los menciona, así que esos dos ritmos no sonarán si se abre esta copia.
+El código (`index.html`) todavía usa `rueda-de-tambor.mp3` (ritmo «Rueda de Tambor»), así que ese ritmo no sonará si se abre esta copia.
+`trombone-mambo` ya no aparece en el código; solo queda su portada en `img/`.
+
+`web/au/cumbia-de-la-calle.mp3` está en el repositorio pero ningún ritmo lo usa todavía.
+
+## Estado: demo
+
+Lo publicado es una demo sin servidor: las cuentas no se guardan, la grabación se simula con un sonido de ejemplo
+y los llameos, tomas y publicaciones se borran al recargar la página.
 
 ## Convenciones del proyecto
 
