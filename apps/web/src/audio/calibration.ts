@@ -42,7 +42,8 @@ export function clickThreshold(samples: Float32Array, quietSamples: number): num
 /** Plays clicks while recording and measures how late the mic hears them, on the audio clock. */
 export async function calibrate(ctx: AudioContext, stream: MediaStream): Promise<CalibrationResult> {
   const recording = recordFrom(stream, ctx);
-  const first = ctx.currentTime + 0.8;
+  await recording.started;
+  const first = ctx.currentTime + 0.5;
   const scheduled = Array.from({ length: CLICKS }, (_, i) => first + i * CLICK_GAP_SEC);
   scheduled.forEach(t => clave(ctx, ctx.destination, t, 2));
 

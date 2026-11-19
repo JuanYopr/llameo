@@ -27,13 +27,19 @@ export async function openMic(): Promise<MediaStream> {
 export type Recording = { blob: Blob; buffer: AudioBuffer; startedAt: number };
 
 /** `startedAt` is the audio-clock time the recorder reported starting; sample 0 of the take maps to it. */
-export function recordFrom(stream: MediaStream, ctx: AudioContext): { stop(): Promise<Recording> } {
+export function recordFrom(
+  stream: MediaStream,
+  ctx: AudioContext,
+): { started: Promise<void>; stop(): Promise<Recording> } {
   const rec = new MediaRecorder(stream);
   const chunks: Blob[] = [];
   let startedAt = ctx.currentTime;
-  rec.onstart = () => {
-    startedAt = ctx.currentTime;
-  };
+  const started = new Promise<void>(resolve => {
+    rec.onstart = () => {
+      startedAt = ctx.currentTime;
+      resolve();
+    };
+  });
   rec.ondataavailable = e => {
     if (e.data.size) chunks.push(e.data);
   };
@@ -43,6 +49,7 @@ export function recordFrom(stream: MediaStream, ctx: AudioContext): { stop(): Pr
   rec.start();
 
   return {
+    started,
     async stop() {
       if (rec.state !== 'inactive') rec.stop();
       await stopped;
