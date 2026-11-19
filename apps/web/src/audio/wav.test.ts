@@ -1,16 +1,5 @@
 import { expect, test } from 'vitest';
-import { encodeWav, offsetFromFileName, takeFileName } from './wav';
-
-test('take file name carries the signed offset and a safe output label', () => {
-  expect(takeFileName('el-pescador', 232, 'AirPods Pro')).toBe('toma_el-pescador_+232ms_airpods-pro.wav');
-  expect(takeFileName('caliente', -15, 'default')).toBe('toma_caliente_-15ms_default.wav');
-});
-
-test('offset round-trips through the file name', () => {
-  expect(offsetFromFileName(takeFileName('el-pescador', 2656, 'Wired'))).toBe(2656);
-  expect(offsetFromFileName('toma_caliente_-15ms_default.wav')).toBe(-15);
-  expect(offsetFromFileName('mi-grabacion.wav')).toBeNull();
-});
+import { encodeWav } from './wav';
 
 test('encodes a mono 16-bit WAV', async () => {
   const data = Float32Array.from([0, 1, -1, 0.5]);

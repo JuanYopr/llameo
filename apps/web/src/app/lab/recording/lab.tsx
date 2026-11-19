@@ -15,7 +15,8 @@ import {
 } from '@/audio/calibration';
 import { Engine, type Layer } from '@/audio/engine';
 import { MicError, openMic, recordFrom, type MicErrorReason, type Recording } from '@/audio/recorder';
-import { encodeWav, offsetFromFileName, takeFileName } from '@/audio/wav';
+import { encodeWav } from '@/audio/wav';
+import { offsetFromFileName, takeFileName } from './take-file';
 
 const RITMOS = [
   { id: 'el-pescador', name: 'El Pescador', bpm: 92, offsetSec: 0.255 },
@@ -55,6 +56,7 @@ export function Lab() {
   const [nudge, setNudge] = useState(0);
   const [errorMs, setErrorMs] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
+  const totalOffsetMs = (take?.offsetMs ?? 0) + nudge;
 
   const ctxRef = useRef<AudioContext | null>(null);
   const engineRef = useRef<Engine | null>(null);
@@ -111,25 +113,20 @@ export function Lab() {
     const { ctx } = audio();
     stopPlayback();
     setBusy('calibrating');
-    const m = await mic();
-    if (!m) return setBusy(null);
-    setStatus('Escuchando los clics…');
-    let result;
     try {
-      result = await calibrate(ctx, m.stream);
+      const m = await mic();
+      if (!m) return;
+      setStatus('Escuchando los clics…');
+      const result = await calibrate(ctx, m.stream);
+      if (!result.ok) return setStatus(CALIBRATION_MESSAGES[result.reason]);
+      saveLatency(m.output, result.latencyMs);
+      setLatency(result.latencyMs);
+      setStatus(`Listo: ${result.latencyMs} ms de latencia con «${m.output}».`);
     } catch {
       setStatus('La calibración falló. Prueba otra vez.');
-      return;
     } finally {
       setBusy(null);
     }
-    if (!result.ok) {
-      setStatus(CALIBRATION_MESSAGES[result.reason]);
-      return;
-    }
-    saveLatency(m.output, result.latencyMs);
-    setLatency(result.latencyMs);
-    setStatus(`Listo: ${result.latencyMs} ms de latencia con «${m.output}».`);
   }
 
   async function onRecord() {
@@ -146,8 +143,15 @@ export function Lab() {
       setStatus('No pude cargar el audio del ritmo.');
       return setBusy(null);
     }
-    const rec = recordFrom(m.stream, ctx);
-    await rec.started;
+    let rec: ReturnType<typeof recordFrom>;
+    try {
+      // MediaRecorder throws on browsers that can't record this stream.
+      rec = recordFrom(m.stream, ctx);
+      await rec.started;
+    } catch {
+      setStatus('No pude empezar a grabar.');
+      return setBusy(null);
+    }
     const schedule = engine.play({ layers: [{ key: 'track', buffer: track }], ...ritmo, countIn: true });
     recRef.current = { stop: rec.stop, schedule, latency: m.latency ?? 0 };
     setTake(null);
@@ -190,13 +194,15 @@ export function Lab() {
     setPlaying(true);
   }
 
+  const playTake = (t: Take) => playWith([{ key: 'take', buffer: t.buffer, offsetMs: totalOffsetMs }]);
+
   function onListen() {
     if (playing) return stopPlayback();
-    if (take) void playWith([{ key: 'take', buffer: take.buffer, offsetMs: take.offsetMs + nudge }]);
+    if (take) void playTake(take);
   }
 
   function onNudgeDone() {
-    if (playing && take) void playWith([{ key: 'take', buffer: take.buffer, offsetMs: take.offsetMs + nudge }]);
+    if (playing && take) void playTake(take);
   }
 
   function onMeasure() {
@@ -214,7 +220,7 @@ export function Lab() {
       setStatus('No encontré el clic en la toma. Graba con un audífono pegado al micrófono.');
       return;
     }
-    setErrorMs(alignmentErrorMs(from / rate + onset, take.offsetMs + nudge, click, s.t0));
+    setErrorMs(alignmentErrorMs(from / rate + onset, totalOffsetMs, click, s.t0));
     setStatus('');
   }
 
@@ -223,7 +229,7 @@ export function Lab() {
     const url = URL.createObjectURL(encodeWav(take.buffer));
     const a = document.createElement('a');
     a.href = url;
-    a.download = takeFileName(ritmo.id, take.offsetMs + nudge, output ?? 'default');
+    a.download = takeFileName(ritmo.id, totalOffsetMs, output ?? 'default');
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
@@ -331,7 +337,7 @@ export function Lab() {
               style={{ width: '100%' }}
             />
           </label>
-          <p className="mono">Desfase total: {take.offsetMs + nudge} ms</p>
+          <p className="mono">Desfase total: {totalOffsetMs} ms</p>
           {take.session && (
             <button className="btn alt" onClick={onMeasure}>
               Medir
