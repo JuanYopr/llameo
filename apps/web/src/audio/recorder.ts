@@ -26,7 +26,6 @@ export async function openMic(): Promise<MediaStream> {
 
 export type Recording = { blob: Blob; buffer: AudioBuffer; startedAt: number };
 
-/** `startedAt` is the audio-clock time the recorder reported starting; sample 0 of the take maps to it. */
 export function recordFrom(
   stream: MediaStream,
   ctx: AudioContext,
@@ -39,7 +38,6 @@ export function recordFrom(
       startedAt = ctx.currentTime;
       resolve();
     };
-    // Without this a recorder that fails before starting leaves callers awaiting `started` forever.
     rec.onerror = reject;
   });
   rec.ondataavailable = e => {

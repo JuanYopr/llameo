@@ -5,7 +5,6 @@ export type Layer = { key: string; buffer: AudioBuffer; gain?: number; muted?: b
 export const SCHEDULE_MARGIN_SEC = 0.12;
 const FADE_SEC = 0.03;
 
-/** The prototype's clave hit (`V.clave`): a short falling sine. */
 export function clave(ctx: AudioContext, out: AudioNode, when: number, level: number): OscillatorNode {
   const osc = ctx.createOscillator();
   const env = ctx.createGain();
@@ -45,7 +44,14 @@ export class Engine {
     return this.live > 0;
   }
 
-  play(opts: { layers: Layer[]; bpm: number; offsetSec: number; countIn: boolean; rate?: number }): Schedule {
+  play(opts: {
+    layers: Layer[];
+    bpm: number;
+    offsetSec: number;
+    countIn: boolean;
+    rate?: number;
+    onEnded?: () => void;
+  }): Schedule {
     this.stop();
     const rate = opts.rate ?? 1;
     const schedule = schedulePlayback({ ...opts, now: this.ctx.currentTime + SCHEDULE_MARGIN_SEC });
@@ -67,6 +73,7 @@ export class Engine {
       src.start(schedule.t0 + (when - schedule.t0) / rate, skipSec);
       src.onended = () => {
         this.live = Math.max(0, this.live - 1);
+        if (this.live === 0) opts.onEnded?.();
       };
       this.sources.push(src);
       this.live++;
@@ -80,7 +87,7 @@ export class Engine {
       try {
         src.stop();
       } catch {
-        // already stopped
+        // clave() already scheduled its own stop(); older WebKit throws InvalidStateError on a second one.
       }
     }
     for (const v of this.voices.values()) v.gain.disconnect();

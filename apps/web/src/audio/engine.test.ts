@@ -1,4 +1,4 @@
-import { beforeEach, expect, test } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 import { Engine } from './engine';
 import { FakeContext, fakeBuffer } from './fake-context';
 
@@ -71,16 +71,22 @@ test('stop stops every source and playing becomes false', () => {
   engine.play({ ...pescador, layers: [{ key: 'track', buffer: fakeBuffer(10) }] });
   engine.stop();
   expect(ctx.of('buffer')[0]!.calls.some(c => c[0] === 'stop')).toBe(true);
-  // A plain stop() has no time argument, so it cuts the count-in clicks that haven't sounded yet.
-  for (const osc of ctx.of('oscillator')) expect(osc.calls.at(-1)).toEqual(['stop', 0]);
   expect(engine.playing).toBe(false);
 });
 
+test('stop cuts pending count-in clicks immediately', () => {
+  engine.play({ ...pescador, layers: [] });
+  engine.stop();
+  for (const osc of ctx.of('oscillator')) expect(osc.calls.at(-1)).toEqual(['stop', 0]);
+});
+
 test('playing becomes false when the last layer ends on its own', () => {
-  engine.play({ ...pescador, layers: [{ key: 'a', buffer: fakeBuffer(1) }, { key: 'b', buffer: fakeBuffer(2) }] });
+  const ended = vi.fn();
+  engine.play({ ...pescador, onEnded: ended, layers: [{ key: 'a', buffer: fakeBuffer(1) }, { key: 'b', buffer: fakeBuffer(2) }] });
   const [a, b] = ctx.of('buffer');
   a!.onended!();
   expect(engine.playing).toBe(true);
   b!.onended!();
   expect(engine.playing).toBe(false);
+  expect(ended).toHaveBeenCalledOnce();
 });

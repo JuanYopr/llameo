@@ -23,10 +23,11 @@ export function summarize(onsetsSec: (number | null)[], scheduledSec: number[]):
   return { ok: true, latencyMs: Math.round(median) };
 }
 
-/**
- * A click must stand well above the room's noise; otherwise noise alone would "find" a click right at
- * every scheduled time and calibrate to ~0 ms.
- */
+const MIN_CLICK_LEVEL = 0.02;
+const CLICK_OVER_NOISE_RMS = 6;
+const CLICK_FRACTION_OF_PEAK = 0.3;
+const CLICK_PRE_ROLL_SEC = 0.1;
+
 export function clickThreshold(samples: Float32Array, quietSamples: number): number {
   let sum = 0;
   let peak = 0;
@@ -36,10 +37,17 @@ export function clickThreshold(samples: Float32Array, quietSamples: number): num
     if (i < quiet) sum += a * a;
     if (a > peak) peak = a;
   }
-  return Math.max(0.02, 6 * Math.sqrt(sum / quiet), 0.3 * peak);
+  return Math.max(MIN_CLICK_LEVEL, CLICK_OVER_NOISE_RMS * Math.sqrt(sum / quiet), CLICK_FRACTION_OF_PEAK * peak);
 }
 
-/** Plays clicks while recording and measures how late the mic hears them, on the audio clock. */
+/** Sample range of a recording to search for one click: from just before it up to just before the next. */
+export function clickWindow(o: { clickSec: number; nextClickSec: number; startedAt: number; rate: number }) {
+  return {
+    from: Math.max(0, Math.round((o.clickSec - o.startedAt - CLICK_PRE_ROLL_SEC) * o.rate)),
+    to: Math.round((o.nextClickSec - o.startedAt - CLICK_PRE_ROLL_SEC) * o.rate),
+  };
+}
+
 export async function calibrate(ctx: AudioContext, stream: MediaStream): Promise<CalibrationResult> {
   const recording = recordFrom(stream, ctx);
   await recording.started;
@@ -52,23 +60,19 @@ export async function calibrate(ctx: AudioContext, stream: MediaStream): Promise
 
   const samples = buffer.getChannelData(0);
   const rate = buffer.sampleRate;
-  const threshold = clickThreshold(samples, Math.round((first - startedAt - 0.1) * rate));
+  const threshold = clickThreshold(samples, clickWindow({ clickSec: first, nextClickSec: first, startedAt, rate }).from);
   const onsets = scheduled.map(t => {
-    // Each click gets its own window so a late (Bluetooth) click can't be mistaken for the next one.
-    const from = Math.max(0, Math.round((t - startedAt - 0.1) * rate));
-    const to = Math.round((t - startedAt + CLICK_GAP_SEC - 0.1) * rate);
+    const { from, to } = clickWindow({ clickSec: t, nextClickSec: t + CLICK_GAP_SEC, startedAt, rate });
     const onset = detectOnset(samples.subarray(from, to), rate, { threshold });
     return onset == null ? null : startedAt + from / rate + onset;
   });
   return summarize(onsets, scheduled);
 }
 
-/** Skip into the take so that what the mic heard at `t0` plays at `t0`. */
 export function takeOffsetMs({ latencyMs, t0, startedAt }: { latencyMs: number; t0: number; startedAt: number }): number {
   return Math.round(latencyMs + (t0 - startedAt) * 1000);
 }
 
-/** How far a click recorded in the take lands from where it was played, once `offsetMs` is applied. */
 export function alignmentErrorMs({
   onsetInTakeSec,
   offsetMs,

@@ -7,6 +7,7 @@ import {
   alignmentErrorMs,
   calibrate,
   clickThreshold,
+  clickWindow,
   loadLatency,
   looksBluetooth,
   outputKey,
@@ -15,7 +16,7 @@ import {
 } from '@/audio/calibration';
 import { Engine, type Layer } from '@/audio/engine';
 import { MicError, openMic, recordFrom, type MicErrorReason, type Recording } from '@/audio/recorder';
-import { encodeWav } from '@/audio/wav';
+import { encodeMonoWav } from '@/audio/wav';
 import { offsetFromFileName, takeFileName } from './take-file';
 
 const RITMOS = [
@@ -37,12 +38,9 @@ const CALIBRATION_MESSAGES = {
 
 const PASS_MS = { wired: 20, bluetooth: 40 };
 
-type Take = {
-  buffer: AudioBuffer;
-  offsetMs: number;
-  // Only mic takes have a session; uploaded files can't be measured.
-  session?: { t0: number; clicks: number[]; startedAt: number };
-};
+type Take =
+  | { kind: 'mic'; buffer: AudioBuffer; offsetMs: number; t0: number; clicks: number[]; startedAt: number }
+  | { kind: 'upload'; buffer: AudioBuffer; offsetMs: number };
 
 type Mic = { stream: MediaStream; output: string; latency: number | null };
 
@@ -129,9 +127,9 @@ export function Lab() {
   }
 
   async function onRecord() {
+    if (busy) return;
     const { ctx, engine } = audio();
     stopPlayback();
-    // Set before the first await: loading the ritmo can take seconds, and a second tap would start a second recorder.
     setBusy('starting');
     const m = await mic();
     if (!m) return setBusy(null);
@@ -144,7 +142,6 @@ export function Lab() {
     }
     let rec: ReturnType<typeof recordFrom>;
     try {
-      // MediaRecorder throws on browsers that can't record this stream.
       rec = recordFrom(m.stream, ctx);
       await rec.started;
     } catch {
@@ -175,7 +172,7 @@ export function Lab() {
     }
     const { buffer, startedAt } = recording;
     const { t0, countInClicks } = r.schedule;
-    setTake({ buffer, offsetMs: takeOffsetMs({ latencyMs: r.latency, t0, startedAt }), session: { t0, clicks: countInClicks, startedAt } });
+    setTake({ kind: 'mic', buffer, offsetMs: takeOffsetMs({ latencyMs: r.latency, t0, startedAt }), t0, clicks: countInClicks, startedAt });
     setNudge(0);
     setStatus('Toma lista. Escúchala y ajusta si hace falta.');
   }
@@ -189,32 +186,33 @@ export function Lab() {
       setStatus('No pude cargar el audio del ritmo.');
       return;
     }
-    engine.play({ layers: [{ key: 'track', buffer: track, gain: 0.8 }, ...layers], ...ritmo, countIn: false });
+    engine.play({
+      layers: [{ key: 'track', buffer: track, gain: 0.8 }, ...layers],
+      ...ritmo,
+      countIn: false,
+      onEnded: () => setPlaying(false),
+    });
     setPlaying(true);
   }
 
   const playTake = (t: Take) => playWith([{ key: 'take', buffer: t.buffer, offsetMs: totalOffsetMs }]);
 
-  // `playing` stays true after the track ends on its own; the engine knows whether anything is still sounding.
-  const sounding = () => playing && !!audioRef.current?.engine.playing;
-
   function onListen() {
-    if (sounding()) return stopPlayback();
+    if (playing) return stopPlayback();
     if (take) void playTake(take);
   }
 
   function onNudgeDone() {
-    if (sounding() && take) void playTake(take);
+    if (playing && take) void playTake(take);
   }
 
   function onMeasure() {
-    const s = take?.session;
-    const [click, next] = s?.clicks ?? [];
-    if (!take || !s || click == null || next == null) return;
+    if (take?.kind !== 'mic') return;
+    const [click, next] = take.clicks;
+    if (click == null || next == null) return;
     const samples = take.buffer.getChannelData(0);
     const rate = take.buffer.sampleRate;
-    const from = Math.max(0, Math.round((click - s.startedAt - 0.1) * rate));
-    const to = Math.round((next - s.startedAt - 0.1) * rate);
+    const { from, to } = clickWindow({ clickSec: click, nextClickSec: next, startedAt: take.startedAt, rate });
     const threshold = clickThreshold(samples.subarray(0, to), from);
     const onset = detectOnset(samples.subarray(from, to), rate, { threshold });
     if (onset == null) {
@@ -222,13 +220,13 @@ export function Lab() {
       setStatus('No encontré el clic en la toma. Graba con un audífono pegado al micrófono.');
       return;
     }
-    setErrorMs(alignmentErrorMs({ onsetInTakeSec: from / rate + onset, offsetMs: totalOffsetMs, clickSec: click, t0: s.t0 }));
+    setErrorMs(alignmentErrorMs({ onsetInTakeSec: from / rate + onset, offsetMs: totalOffsetMs, clickSec: click, t0: take.t0 }));
     setStatus('');
   }
 
   function onDownload() {
     if (!take) return;
-    const url = URL.createObjectURL(encodeWav(take.buffer));
+    const url = URL.createObjectURL(encodeMonoWav(take.buffer));
     const a = document.createElement('a');
     a.href = url;
     a.download = takeFileName(ritmo.id, totalOffsetMs, output ?? 'default');
@@ -252,7 +250,7 @@ export function Lab() {
     const [file] = await decodeFiles(e);
     if (!file) return;
     stopPlayback();
-    setTake({ buffer: file.buffer, offsetMs: offsetFromFileName(file.name) ?? 0 });
+    setTake({ kind: 'upload', buffer: file.buffer, offsetMs: offsetFromFileName(file.name) ?? 0 });
     setNudge(0);
     setErrorMs(null);
     setStatus('Toma subida. Ajusta el desfase a oído.');
@@ -343,7 +341,7 @@ export function Lab() {
             />
           </label>
           <p className="mono">Desfase total: {totalOffsetMs} ms</p>
-          {take.session && (
+          {take.kind === 'mic' && (
             <button className="btn alt" onClick={onMeasure}>
               Medir
             </button>

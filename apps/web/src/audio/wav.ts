@@ -1,5 +1,4 @@
-/** Mono 16-bit PCM from the first channel. */
-export function encodeWav(buffer: AudioBuffer): Blob {
+export function encodeMonoWav(buffer: AudioBuffer): Blob {
   const samples = buffer.getChannelData(0);
   const view = new DataView(new ArrayBuffer(44 + samples.length * 2));
   const ascii = (at: number, s: string) => [...s].forEach((c, i) => view.setUint8(at + i, c.charCodeAt(0)));

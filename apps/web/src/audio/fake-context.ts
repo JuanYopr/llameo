@@ -1,4 +1,3 @@
-// Records the Web Audio calls the engine makes, so tests can assert on scheduling without a browser.
 type Call = [string, ...number[]];
 
 function param(calls: Call[], value = 1) {
