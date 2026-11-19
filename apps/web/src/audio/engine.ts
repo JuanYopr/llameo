@@ -6,7 +6,7 @@ export const SCHEDULE_MARGIN_SEC = 0.12;
 const FADE_SEC = 0.03;
 
 /** The prototype's clave hit (`V.clave`): a short falling sine. */
-export function clave(ctx: AudioContext, out: AudioNode, when: number, level: number): void {
+export function clave(ctx: AudioContext, out: AudioNode, when: number, level: number): OscillatorNode {
   const osc = ctx.createOscillator();
   const env = ctx.createGain();
   const dur = 0.07;
@@ -21,6 +21,7 @@ export function clave(ctx: AudioContext, out: AudioNode, when: number, level: nu
   env.connect(out);
   osc.start(when);
   osc.stop(when + dur + 0.05);
+  return osc;
 }
 
 type Voice = { gain: GainNode; level: number; muted: boolean };
@@ -49,7 +50,7 @@ export class Engine {
     const rate = opts.rate ?? 1;
     const schedule = schedulePlayback({ ...opts, now: this.ctx.currentTime + SCHEDULE_MARGIN_SEC });
 
-    schedule.countInClicks.forEach((t, i) => clave(this.ctx, this.master, t, i === 0 ? 1.1 : 0.7));
+    schedule.countInClicks.forEach((t, i) => this.sources.push(clave(this.ctx, this.master, t, i === 0 ? 1.1 : 0.7)));
 
     for (const layer of opts.layers) {
       const voice: Voice = { gain: this.ctx.createGain(), level: layer.gain ?? 1, muted: !!layer.muted };

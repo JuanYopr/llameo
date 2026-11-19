@@ -49,7 +49,7 @@ export function Lab() {
   const [ritmo, setRitmo] = useState<Ritmo>(RITMOS[0]);
   const [output, setOutput] = useState<string | null>(null);
   const [latency, setLatency] = useState<number | null>(null);
-  const [busy, setBusy] = useState<'calibrating' | 'recording' | null>(null);
+  const [busy, setBusy] = useState<'calibrating' | 'starting' | 'recording' | null>(null);
   const [status, setStatus] = useState('');
   const [take, setTake] = useState<Take | null>(null);
   const [nudge, setNudge] = useState(0);
@@ -110,12 +110,19 @@ export function Lab() {
   async function onCalibrate() {
     const { ctx } = audio();
     stopPlayback();
-    const m = await mic();
-    if (!m) return;
     setBusy('calibrating');
+    const m = await mic();
+    if (!m) return setBusy(null);
     setStatus('Escuchando los clics…');
-    const result = await calibrate(ctx, m.stream);
-    setBusy(null);
+    let result;
+    try {
+      result = await calibrate(ctx, m.stream);
+    } catch {
+      setStatus('La calibración falló. Prueba otra vez.');
+      return;
+    } finally {
+      setBusy(null);
+    }
     if (!result.ok) {
       setStatus(CALIBRATION_MESSAGES[result.reason]);
       return;
@@ -128,14 +135,16 @@ export function Lab() {
   async function onRecord() {
     const { ctx, engine } = audio();
     stopPlayback();
+    // Set before the first await: loading the ritmo can take seconds, and a second tap would start a second recorder.
+    setBusy('starting');
     const m = await mic();
-    if (!m) return;
+    if (!m) return setBusy(null);
     let track: AudioBuffer;
     try {
       track = await loadTrack(ctx, ritmo);
     } catch {
       setStatus('No pude cargar el audio del ritmo.');
-      return;
+      return setBusy(null);
     }
     const rec = recordFrom(m.stream, ctx);
     await rec.started;
@@ -152,11 +161,19 @@ export function Lab() {
     const r = recRef.current;
     recRef.current = null;
     if (!r) return;
-    const { buffer, startedAt } = await r.stop();
+    let recording: Recording;
+    try {
+      recording = await r.stop();
+    } catch {
+      setStatus('No pude leer la grabación. Prueba otra vez.');
+      return;
+    } finally {
+      setBusy(null);
+    }
+    const { buffer, startedAt } = recording;
     const { t0, countInClicks } = r.schedule;
     setTake({ buffer, offsetMs: takeOffsetMs(r.latency, t0, startedAt), session: { t0, clicks: countInClicks, startedAt } });
     setNudge(0);
-    setBusy(null);
     setStatus('Toma lista. Escúchala y ajusta si hace falta.');
   }
 
@@ -287,7 +304,7 @@ export function Lab() {
         </button>
       ) : (
         <button className="btn red" disabled={busy != null} onClick={onRecord}>
-          Grabar
+          {busy === 'starting' ? 'Preparando…' : 'Grabar'}
         </button>
       )}
 

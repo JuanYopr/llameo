@@ -71,6 +71,8 @@ test('stop stops every source and playing becomes false', () => {
   engine.play({ ...pescador, layers: [{ key: 'track', buffer: fakeBuffer(10) }] });
   engine.stop();
   expect(ctx.of('buffer')[0]!.calls.some(c => c[0] === 'stop')).toBe(true);
+  // A plain stop() has no time argument, so it cuts the count-in clicks that haven't sounded yet.
+  for (const osc of ctx.of('oscillator')) expect(osc.calls.at(-1)).toEqual(['stop', 0]);
   expect(engine.playing).toBe(false);
 });
 
