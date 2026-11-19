@@ -26,15 +26,15 @@ test('latencies spread over 40 ms fail as inconsistent', () => {
 });
 
 test('a take recorded from before t0 skips the lead-in plus the latency', () => {
-  expect(takeOffsetMs(232, 12.4737, 10.05)).toBe(2656);
+  expect(takeOffsetMs({ latencyMs: 232, t0: 12.4737, startedAt: 10.05 })).toBe(2656);
 });
 
 test('with the true latency the recorded click lines up exactly', () => {
   const t0 = 12.4737, startedAt = 10.05, click = 10.12, latencyMs = 232;
   const onsetInTake = click + latencyMs / 1000 - startedAt;
-  const offsetMs = takeOffsetMs(latencyMs, t0, startedAt);
-  expect(alignmentErrorMs(onsetInTake, offsetMs, click, t0)).toBeCloseTo(0, 0);
-  expect(alignmentErrorMs(onsetInTake, offsetMs - 30, click, t0)).toBeCloseTo(30, 0);
+  const offsetMs = takeOffsetMs({ latencyMs, t0, startedAt });
+  expect(alignmentErrorMs({ onsetInTakeSec: onsetInTake, offsetMs, clickSec: click, t0 })).toBeCloseTo(0, 0);
+  expect(alignmentErrorMs({ onsetInTakeSec: onsetInTake, offsetMs: offsetMs - 30, clickSec: click, t0 })).toBeCloseTo(30, 0);
 });
 
 test('a recording with only room noise finds no click at any scheduled time', () => {

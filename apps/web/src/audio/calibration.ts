@@ -64,12 +64,22 @@ export async function calibrate(ctx: AudioContext, stream: MediaStream): Promise
 }
 
 /** Skip into the take so that what the mic heard at `t0` plays at `t0`. */
-export function takeOffsetMs(latencyMs: number, t0: number, startedAt: number): number {
+export function takeOffsetMs({ latencyMs, t0, startedAt }: { latencyMs: number; t0: number; startedAt: number }): number {
   return Math.round(latencyMs + (t0 - startedAt) * 1000);
 }
 
 /** How far a click recorded in the take lands from where it was played, once `offsetMs` is applied. */
-export function alignmentErrorMs(onsetInTakeSec: number, offsetMs: number, clickSec: number, t0: number): number {
+export function alignmentErrorMs({
+  onsetInTakeSec,
+  offsetMs,
+  clickSec,
+  t0,
+}: {
+  onsetInTakeSec: number;
+  offsetMs: number;
+  clickSec: number;
+  t0: number;
+}): number {
   return (onsetInTakeSec - offsetMs / 1000 - (clickSec - t0)) * 1000;
 }
 

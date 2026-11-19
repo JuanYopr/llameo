@@ -17,7 +17,7 @@ export async function openMic(): Promise<MediaStream> {
   try {
     return await navigator.mediaDevices.getUserMedia(MIC_CONSTRAINTS);
   } catch (e) {
-    const name = (e as { name?: string }).name;
+    const name = e instanceof DOMException ? e.name : undefined;
     if (name === 'NotAllowedError' || name === 'SecurityError') throw new MicError('denied');
     if (name === 'NotFoundError' || name === 'OverconstrainedError') throw new MicError('no-device');
     throw e;
@@ -34,11 +34,13 @@ export function recordFrom(
   const rec = new MediaRecorder(stream);
   const chunks: Blob[] = [];
   let startedAt = ctx.currentTime;
-  const started = new Promise<void>(resolve => {
+  const started = new Promise<void>((resolve, reject) => {
     rec.onstart = () => {
       startedAt = ctx.currentTime;
       resolve();
     };
+    // Without this a recorder that fails before starting leaves callers awaiting `started` forever.
+    rec.onerror = reject;
   });
   rec.ondataavailable = e => {
     if (e.data.size) chunks.push(e.data);

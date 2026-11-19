@@ -58,20 +58,19 @@ export function Lab() {
   const [playing, setPlaying] = useState(false);
   const totalOffsetMs = (take?.offsetMs ?? 0) + nudge;
 
-  const ctxRef = useRef<AudioContext | null>(null);
-  const engineRef = useRef<Engine | null>(null);
+  const audioRef = useRef<{ ctx: AudioContext; engine: Engine } | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const tracksRef = useRef(new Map<string, Promise<AudioBuffer>>());
   const recRef = useRef<{ stop(): Promise<Recording>; schedule: Schedule; latency: number } | null>(null);
 
   // Called first in every handler, inside the tap, so iOS lets the audio start.
   function audio() {
-    if (!ctxRef.current) {
-      ctxRef.current = new AudioContext();
-      engineRef.current = new Engine(ctxRef.current);
+    if (!audioRef.current) {
+      const ctx = new AudioContext();
+      audioRef.current = { ctx, engine: new Engine(ctx) };
     }
-    void ctxRef.current.resume();
-    return { ctx: ctxRef.current, engine: engineRef.current! };
+    void audioRef.current.ctx.resume();
+    return audioRef.current;
   }
 
   async function mic(): Promise<Mic | null> {
@@ -105,7 +104,7 @@ export function Lab() {
   }
 
   function stopPlayback() {
-    engineRef.current?.stop();
+    audioRef.current?.engine.stop();
     setPlaying(false);
   }
 
@@ -161,7 +160,7 @@ export function Lab() {
   }
 
   async function onStopRecording() {
-    engineRef.current?.stop();
+    audioRef.current?.engine.stop();
     const r = recRef.current;
     recRef.current = null;
     if (!r) return;
@@ -176,7 +175,7 @@ export function Lab() {
     }
     const { buffer, startedAt } = recording;
     const { t0, countInClicks } = r.schedule;
-    setTake({ buffer, offsetMs: takeOffsetMs(r.latency, t0, startedAt), session: { t0, clicks: countInClicks, startedAt } });
+    setTake({ buffer, offsetMs: takeOffsetMs({ latencyMs: r.latency, t0, startedAt }), session: { t0, clicks: countInClicks, startedAt } });
     setNudge(0);
     setStatus('Toma lista. Escúchala y ajusta si hace falta.');
   }
@@ -207,10 +206,10 @@ export function Lab() {
 
   function onMeasure() {
     const s = take?.session;
-    if (!take || !s || s.clicks.length < 2) return;
+    const [click, next] = s?.clicks ?? [];
+    if (!take || !s || click == null || next == null) return;
     const samples = take.buffer.getChannelData(0);
     const rate = take.buffer.sampleRate;
-    const [click, next] = s.clicks as [number, number];
     const from = Math.max(0, Math.round((click - s.startedAt - 0.1) * rate));
     const to = Math.round((next - s.startedAt - 0.1) * rate);
     const threshold = clickThreshold(samples.subarray(0, to), from);
@@ -220,7 +219,7 @@ export function Lab() {
       setStatus('No encontré el clic en la toma. Graba con un audífono pegado al micrófono.');
       return;
     }
-    setErrorMs(alignmentErrorMs(from / rate + onset, totalOffsetMs, click, s.t0));
+    setErrorMs(alignmentErrorMs({ onsetInTakeSec: from / rate + onset, offsetMs: totalOffsetMs, clickSec: click, t0: s.t0 }));
     setStatus('');
   }
 
