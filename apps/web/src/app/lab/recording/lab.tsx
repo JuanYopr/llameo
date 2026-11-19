@@ -195,13 +195,16 @@ export function Lab() {
 
   const playTake = (t: Take) => playWith([{ key: 'take', buffer: t.buffer, offsetMs: totalOffsetMs }]);
 
+  // `playing` stays true after the track ends on its own; the engine knows whether anything is still sounding.
+  const sounding = () => playing && !!audioRef.current?.engine.playing;
+
   function onListen() {
-    if (playing) return stopPlayback();
+    if (sounding()) return stopPlayback();
     if (take) void playTake(take);
   }
 
   function onNudgeDone() {
-    if (playing && take) void playTake(take);
+    if (sounding() && take) void playTake(take);
   }
 
   function onMeasure() {
@@ -313,7 +316,7 @@ export function Lab() {
         </button>
       )}
 
-      {status && <p role="status">{status}</p>}
+      <p role="status">{status}</p>
 
       {take && (
         <>
@@ -330,7 +333,10 @@ export function Lab() {
               max={500}
               step={5}
               value={nudge}
-              onChange={e => setNudge(Number(e.target.value))}
+              onChange={e => {
+                setNudge(Number(e.target.value));
+                setErrorMs(null);
+              }}
               onPointerUp={onNudgeDone}
               onKeyUp={onNudgeDone}
               style={{ width: '100%' }}
@@ -356,7 +362,7 @@ export function Lab() {
 
       <h3>Mezclar tomas</h3>
       <p className="mut">Elige dos o más tomas descargadas; suenan sobre el ritmo, cada una con su desfase.</p>
-      <input type="file" accept=".wav,audio/wav" multiple onChange={onMix} aria-label="Tomas para mezclar" />
+      <input type="file" accept=".wav,audio/wav" multiple disabled={busy != null} onChange={onMix} aria-label="Tomas para mezclar" />
       {playing && !take && (
         <button className="btn alt" onClick={stopPlayback}>
           Parar
@@ -364,7 +370,7 @@ export function Lab() {
       )}
 
       <h3>Sin micrófono</h3>
-      <input type="file" accept="audio/*" onChange={onUpload} aria-label="Subir una toma" />
+      <input type="file" accept="audio/*" disabled={busy != null} onChange={onUpload} aria-label="Subir una toma" />
     </section>
   );
 }
