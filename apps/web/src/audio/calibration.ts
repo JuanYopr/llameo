@@ -48,12 +48,12 @@ export function clickWindow(o: { clickSec: number; nextClickSec: number; started
   };
 }
 
-export async function calibrate(ctx: AudioContext, stream: MediaStream): Promise<CalibrationResult> {
+export async function calibrate(ctx: AudioContext, stream: MediaStream, out: AudioNode): Promise<CalibrationResult> {
   const recording = recordFrom(stream, ctx);
   await recording.started;
   const first = ctx.currentTime + 0.5;
   const scheduled = Array.from({ length: CLICKS }, (_, i) => first + i * CLICK_GAP_SEC);
-  scheduled.forEach(t => clave(ctx, ctx.destination, t, 2));
+  scheduled.forEach(t => clave(ctx, out, t, 2));
 
   await new Promise(r => setTimeout(r, (scheduled.at(-1)! + CLICK_GAP_SEC - ctx.currentTime) * 1000));
   const { buffer, startedAt } = await recording.stop();
@@ -113,7 +113,7 @@ export function saveLatency(key: string, ms: number): void {
 export function loadLatency(key: string): number | null {
   try {
     const raw = localStorage.getItem(storageKey(key));
-    const ms = raw == null ? NaN : Number(raw);
+    const ms = raw ? Number(raw) : NaN;
     return Number.isFinite(ms) ? ms : null;
   } catch {
     return null;

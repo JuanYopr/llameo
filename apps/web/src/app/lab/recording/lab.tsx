@@ -2,7 +2,7 @@
 
 import { detectOnset } from '@llameo/shared/onset';
 import type { Schedule } from '@llameo/shared/timing';
-import { useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import {
   alignmentErrorMs,
   calibrate,
@@ -61,6 +61,16 @@ export function Lab() {
   const tracksRef = useRef(new Map<string, Promise<AudioBuffer>>());
   const recRef = useRef<{ stop(): Promise<Recording>; schedule: Schedule; latency: number } | null>(null);
 
+  useEffect(
+    () => () => {
+      streamRef.current?.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
+      void audioRef.current?.ctx.close();
+      audioRef.current = null;
+    },
+    [],
+  );
+
   // Called first in every handler, inside the tap, so iOS lets the audio start.
   function audio() {
     if (!audioRef.current) {
@@ -72,8 +82,9 @@ export function Lab() {
   }
 
   async function mic(): Promise<Mic | null> {
+    let stream = streamRef.current;
     try {
-      streamRef.current ??= await openMic();
+      if (!stream?.active) stream = streamRef.current = await openMic();
     } catch (e) {
       setStatus(e instanceof MicError ? MIC_MESSAGES[e.reason] : 'No pude abrir el micrófono.');
       return null;
@@ -83,7 +94,7 @@ export function Lab() {
     const stored = loadLatency(out);
     setOutput(out);
     setLatency(stored);
-    return { stream: streamRef.current, output: out, latency: stored };
+    return { stream, output: out, latency: stored };
   }
 
   function loadTrack(ctx: AudioContext, r: Ritmo): Promise<AudioBuffer> {
@@ -107,14 +118,14 @@ export function Lab() {
   }
 
   async function onCalibrate() {
-    const { ctx } = audio();
+    const { ctx, engine } = audio();
     stopPlayback();
     setBusy('calibrating');
     try {
       const m = await mic();
       if (!m) return;
       setStatus('Escuchando los clics…');
-      const result = await calibrate(ctx, m.stream);
+      const result = await calibrate(ctx, m.stream, engine.master);
       if (!result.ok) return setStatus(CALIBRATION_MESSAGES[result.reason]);
       saveLatency(m.output, result.latencyMs);
       setLatency(result.latencyMs);
@@ -152,6 +163,7 @@ export function Lab() {
     recRef.current = { stop: rec.stop, schedule, latency: m.latency ?? 0 };
     setTake(null);
     setErrorMs(null);
+    setPlaying(false);
     setBusy('recording');
     setStatus(m.latency == null ? 'Grabando sin calibrar: la toma puede quedar corrida.' : 'Grabando…');
   }
@@ -177,14 +189,14 @@ export function Lab() {
     setStatus('Toma lista. Escúchala y ajusta si hace falta.');
   }
 
-  async function playWith(layers: Layer[]) {
+  async function playWith(layers: Layer[]): Promise<boolean> {
     const { ctx, engine } = audio();
     let track: AudioBuffer;
     try {
       track = await loadTrack(ctx, ritmo);
     } catch {
       setStatus('No pude cargar el audio del ritmo.');
-      return;
+      return false;
     }
     engine.play({
       layers: [{ key: 'track', buffer: track, gain: 0.8 }, ...layers],
@@ -193,6 +205,7 @@ export function Lab() {
       onEnded: () => setPlaying(false),
     });
     setPlaying(true);
+    return true;
   }
 
   const playTake = (t: Take) => playWith([{ key: 'take', buffer: t.buffer, offsetMs: totalOffsetMs }]);
@@ -260,7 +273,7 @@ export function Lab() {
     const files = await decodeFiles(e);
     if (files.length === 0) return;
     const layers = files.map((f, i) => ({ key: `mix:${i}`, buffer: f.buffer, offsetMs: offsetFromFileName(f.name) ?? 0 }));
-    await playWith(layers);
+    if (!(await playWith(layers))) return;
     setStatus(`Mezclando ${files.map((f, i) => `${f.name} (${layers[i]!.offsetMs} ms)`).join(', ')}`);
   }
 
@@ -319,7 +332,7 @@ export function Lab() {
       {take && (
         <>
           <h3>Revisar la toma</h3>
-          <button className="btn" onClick={onListen}>
+          <button className="btn" disabled={busy != null} onClick={onListen}>
             {playing ? 'Parar' : 'Escuchar con el ritmo'}
           </button>
           <label className="mut">

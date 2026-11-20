@@ -26,7 +26,8 @@ export function clave(ctx: AudioContext, out: AudioNode, when: number, level: nu
 type Voice = { gain: GainNode; level: number; muted: boolean };
 
 export class Engine {
-  private readonly master: AudioNode;
+  /** Where playback goes; calibration clicks must go here too so they pick up the compressor's look-ahead delay. */
+  readonly master: AudioNode;
   private voices = new Map<string, Voice>();
   private sources: AudioScheduledSourceNode[] = [];
   private live = 0;
