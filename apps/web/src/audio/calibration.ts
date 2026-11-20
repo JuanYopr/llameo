@@ -40,7 +40,7 @@ export function clickThreshold(samples: Float32Array, quietSamples: number): num
   return Math.max(MIN_CLICK_LEVEL, CLICK_OVER_NOISE_RMS * Math.sqrt(sum / quiet), CLICK_FRACTION_OF_PEAK * peak);
 }
 
-/** Sample range of a recording to search for one click: from just before it up to just before the next. */
+/** Sample range to search for one click, from just before it to just before the next click. */
 export function clickWindow(o: { clickSec: number; nextClickSec: number; startedAt: number; rate: number }) {
   return {
     from: Math.max(0, Math.round((o.clickSec - o.startedAt - CLICK_PRE_ROLL_SEC) * o.rate)),
@@ -106,7 +106,7 @@ export function saveLatency(key: string, ms: number): void {
   try {
     localStorage.setItem(storageKey(key), String(ms));
   } catch {
-    // Private mode or blocked storage: the user just calibrates again next time.
+    // Private mode or blocked storage rejects the write, so the user calibrates again next time.
   }
 }
 
